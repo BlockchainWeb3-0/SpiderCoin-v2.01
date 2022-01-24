@@ -2,6 +2,7 @@ import fs from "fs";
 import merkle from "merkle";
 import cryptojs from "crypto-js";
 import * as config from "./config";
+import { Hash } from "crypto";
 
 /**
  * @brief Block's header class
@@ -95,7 +96,9 @@ class Block {
 	/**
 	 * @brief Calculation hash of Block(SHA256)
 	 * @param blockHeader
-	 * @returns blockHeader's hash or null when error occurred
+	 * - type: BlockHeader(object)
+	 * - descpription: Block's detail info
+	 * @returns blockHeader's hash or null when blockHeader's type is invalid
 	 */
 	static calHashOfBlock = (blockHeader: BlockHeader): string | null => {
 		if (typeof blockHeader === "object") {
@@ -112,12 +115,16 @@ class Block {
 		}
 		console.log("calHashOfBlock : Invalid BlockHeader");
 
-		// ! returns null when error occurred
+		// ! returns null when blockHeader's type is invalid
 		return null;
 	};
 
+	/**
+	 * @brief creates and returns genesis block
+	 * @returns genesis block which is the first block of blockchain
+	 */
 	static getGenesisBlock = (): Block => {
-		const data: any[] = [config.genesisTransactionData];
+		const data: any[] = [{ transaction: config.genesisTransactionData }];
 		const header = new BlockHeader(
 			Block.getVersion(),
 			0,
@@ -134,15 +141,25 @@ class Block {
 		return genesisBlock;
 	};
 
-	static getAdjustDifficulty = (lastBlock: Block, newBlock: Block): number => {
+	/**
+	 * @brief Adjusts difficulty when the block generation takes times too short or too long
+	 * @returns
+	 * - difficulty - 1 when (expected time * 2) < (measured time)
+	 * - difficulty + 1 when (expected time / 2) > (measured time)
+	 * - difficulty     when it meets expected range
+	 */
+	static getAdjustDifficulty = (
+		lastBlock: Block,
+		newBlockTimeStamp: number
+	): number => {
 		let difficulty = lastBlock.header.difficulty;
 		const newBlockCreationInterval =
-			newBlock.header.timestamp - lastBlock.header.timestamp;
+			newBlockTimeStamp - lastBlock.header.timestamp;
 		const diffifcultyAdjustmentTimeInterval =
 			config.DIFFICULTY_ADJUSTMENT_INTERVAL_BLOCK *
 			config.DIFFICULTY_ADJUSTMENT_INTERVAL_SECOND;
 		if (
-			newBlock.header.index % config.DIFFICULTY_ADJUSTMENT_INTERVAL_BLOCK ===
+			lastBlock.header.index % config.DIFFICULTY_ADJUSTMENT_INTERVAL_BLOCK ===
 				0 &&
 			lastBlock.header.index !== 0
 		) {
@@ -156,6 +173,45 @@ class Block {
 			}
 		}
 		return difficulty;
+	};
+
+	static miningNewBlock = (lastBlock: Block, data: any[]): Block | null => {
+		const version: string = lastBlock.header.version;
+		const index: number = lastBlock.header.index + 1;
+		const prevHash: string | null = lastBlock.hash;
+		const merkleRoot: string =
+			data.length === 0 ? "0".repeat(64) : merkle("sha256").sync(data).root();
+		let timestamp: number = Math.round(Date.now() / 1000); // seconds
+		let difficulty: number = this.getAdjustDifficulty(lastBlock, timestamp);
+		let nonce: number = 0;
+		// ! exception handling : lastBlock hash could be null
+		if (prevHash === null) {
+			return null;
+		}
+		let blockHeader: BlockHeader;
+		let hash: string | null;
+
+		do {
+      nonce++;
+      timestamp = Math.round(Date.now()/1000);
+      blockHeader = new BlockHeader(
+        version,
+        index,
+        prevHash,
+        merkleRoot,
+        timestamp,
+        difficulty,
+        nonce
+      );
+      hash = this.calHashOfBlock(blockHeader);
+      if (hash === null) {
+        // ! exception handling : calculated hash could be null
+        return null
+      }
+    } while (!hash.startsWith("0".repeat(difficulty))) 
+
+		const newBlock = new Block(blockHeader, hash, data);
+    return newBlock
 	};
 }
 
