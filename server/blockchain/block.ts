@@ -175,12 +175,22 @@ class Block {
 		return difficulty;
 	};
 
+	/**
+	 * @brief Find new block to calculate hash (increasing nonce each time to match difficulty)
+	 * @param lastBlock
+	 * @param data
+	 * @returns new block which matches difficulty
+	 */
 	static mineNewBlock = (lastBlock: Block, data: any[]): Block | null => {
 		const version: string = lastBlock.header.version;
 		const index: number = lastBlock.header.index + 1;
 		const prevHash: string | null = lastBlock.hash;
 		const merkleRoot: string =
-			data.length === 0 ? "0".repeat(64) : merkle("sha256").sync([JSON.stringify(data)]).root();
+			data.length === 0
+				? "0".repeat(64)
+				: merkle("sha256")
+						.sync([JSON.stringify(data)])
+						.root();
 		let timestamp: number = Math.round(Date.now() / 1000); // seconds
 		let difficulty: number = this.getAdjustDifficulty(lastBlock, timestamp);
 		let nonce: number = 0;
@@ -192,29 +202,27 @@ class Block {
 		let hash: string | null;
 
 		do {
-      nonce++;
-      timestamp = Math.round(Date.now()/1000);
-      blockHeader = new BlockHeader(
-        version,
-        index,
-        prevHash,
-        merkleRoot,
-        timestamp,
-        difficulty,
-        nonce
-      );
-      hash = this.calHashOfBlock(blockHeader);
-      if (hash === null) {
-        // ! exception handling : calculated hash could be null
-        return null
-      }
-    } while (!hash.startsWith("0".repeat(difficulty))) 
+			nonce++;
+			timestamp = Math.round(Date.now() / 1000);
+			blockHeader = new BlockHeader(
+				version,
+				index,
+				prevHash,
+				merkleRoot,
+				timestamp,
+				difficulty,
+				nonce
+			);
+			hash = this.calHashOfBlock(blockHeader);
+			if (hash === null) {
+				// ! exception handling : calculated hash could be null
+				return null;
+			}
+		} while (!hash.startsWith("0".repeat(difficulty)));
 
 		const newBlock = new Block(blockHeader, hash, data);
-    return newBlock
+		return newBlock;
 	};
-
-	
 }
 
 export { Block, BlockHeader };

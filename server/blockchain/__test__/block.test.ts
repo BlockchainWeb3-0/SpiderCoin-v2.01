@@ -27,7 +27,7 @@ describe("Block class validation", () => {
 
     // * Creates minedBlock using function, miningNewBlock()
     data2 = [{ msg: "data2" }, { transaction: [{ tx3: "3" }, { tx4: "4" }] }];
-    newBlock = Block.miningNewBlock(lastBlock, data2);
+    newBlock = Block.mineNewBlock(lastBlock, data2);
 	});
 
 	test("Validates new block's type", () => {
@@ -70,4 +70,15 @@ describe("Block class validation", () => {
     expect(newBlock.header.merkleRoot).toBe(calculatedMerkleRoot)
 	});
   
+  // test("simple test", ()=> {
+  //   const data3 = [{ msg: "data1" }, { transaction: [{ tx1: "1" }, { tx2: "2" }] }];
+  //   const data4 = [{ msg: "data2" }, { transaction: [{ tx3: "3" }, { tx4: "4" }] }];
+  //   const merkleRoot3 = merkle("sha256").sync(data3).root();
+  //   const merkleRoot4 = merkle("sha256").sync(data4).root();
+  //   console.log(merkleRoot3);
+  //   console.log(merkleRoot4);
+    
+  //   expect(merkleRoot3).not.toEqual(merkleRoot4);
+  // })
+
 });
