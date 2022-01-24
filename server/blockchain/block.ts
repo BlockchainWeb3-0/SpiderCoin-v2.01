@@ -175,17 +175,17 @@ class Block {
 		return difficulty;
 	};
 
-	static miningNewBlock = (lastBlock: Block, data: any[]): Block | null => {
+	static mineNewBlock = (lastBlock: Block, data: any[]): Block | null => {
 		const version: string = lastBlock.header.version;
 		const index: number = lastBlock.header.index + 1;
 		const prevHash: string | null = lastBlock.hash;
 		const merkleRoot: string =
-			data.length === 0 ? "0".repeat(64) : merkle("sha256").sync(data).root();
+			data.length === 0 ? "0".repeat(64) : merkle("sha256").sync([JSON.stringify(data)]).root();
 		let timestamp: number = Math.round(Date.now() / 1000); // seconds
 		let difficulty: number = this.getAdjustDifficulty(lastBlock, timestamp);
 		let nonce: number = 0;
-		// ! exception handling : lastBlock hash could be null
 		if (prevHash === null) {
+			// ! exception handling : lastBlock hash could be null
 			return null;
 		}
 		let blockHeader: BlockHeader;
@@ -213,6 +213,8 @@ class Block {
 		const newBlock = new Block(blockHeader, hash, data);
     return newBlock
 	};
+
+	
 }
 
 export { Block, BlockHeader };
