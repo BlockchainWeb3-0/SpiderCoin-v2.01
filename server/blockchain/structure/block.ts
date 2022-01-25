@@ -1,8 +1,9 @@
 import fs from "fs";
 import merkle from "merkle";
 import cryptojs from "crypto-js";
-import * as config from "./config";
+import * as config from "../config";
 import { Hash } from "crypto";
+import { Transaction } from "../transaction/transaction";
 
 /**
  * @brief Block's header class
@@ -124,7 +125,7 @@ class Block {
 	 * @returns genesis block which is the first block of blockchain
 	 */
 	static getGenesisBlock = (): Block => {
-		const data: any[] = [{ transaction: config.genesisTransactionData }];
+		const data: any[] = [{ transaction: genesisTransactionData }];
 		const header = new BlockHeader(
 			Block.getVersion(),
 			0,
@@ -181,7 +182,7 @@ class Block {
 	 * @param data
 	 * @returns new block which matches difficulty
 	 */
-	static mineNewBlock = (lastBlock: Block, data: any[]): Block | null => {
+	static getNewBlock = (lastBlock: Block, data: any[]): Block | null => {
 		const version: string = lastBlock.header.version;
 		const index: number = lastBlock.header.index + 1;
 		const prevHash: string | null = lastBlock.hash;
@@ -201,8 +202,8 @@ class Block {
 		let blockHeader: BlockHeader;
 		let hash: string | null;
 
+		//* Find block hash which starts with ("0" * difficulty)
 		do {
-			nonce++;
 			timestamp = Math.round(Date.now() / 1000);
 			blockHeader = new BlockHeader(
 				version,
@@ -218,11 +219,97 @@ class Block {
 				// ! exception handling : calculated hash could be null
 				return null;
 			}
+			nonce++;
 		} while (!hash.startsWith("0".repeat(difficulty)));
 
 		const newBlock = new Block(blockHeader, hash, data);
 		return newBlock;
 	};
+
+	/**
+	 * @brief Validates Block structure
+	 * @param block
+	 * @returns true for valid / false for invalid
+	 */
+	static isValidBlockStructure(block: Block): boolean {
+		return (
+			typeof block.header.version === "string" &&
+			typeof block.header.index === "number" &&
+			typeof block.header.prevHash === "string" &&
+			typeof block.header.merkleRoot === "string" &&
+			typeof block.header.timestamp === "number" &&
+			typeof block.header.difficulty === "number" &&
+			typeof block.header.nonce === "number" &&
+			typeof block.data === "object" &&
+			typeof block.hash === "string"
+		);
+	}
+
+	/**
+	 * @brief Validates new block's strucure and header's info(such as prevHash, merkleRoot, ...)
+	 * @param newBlock
+	 * @param lastBlock
+	 * @returns true for valid new block / false for invalid new block
+	 */
+	static isValidNewBlock(newBlock: Block, lastBlock: Block): boolean {
+		/** check list
+		 * 1. version
+		 * 2. index
+		 * 3. prevHash
+		 * 4. merkleRoot
+		 * 5. timestamp
+		 * 6. difficulty
+		 */
+		if (!this.isValidBlockStructure(newBlock)) {
+			console.log("Invalid block structure");
+			return false;
+		}
+		if (newBlock.header.version !== lastBlock.header.version) {
+			console.log("Invalid version");
+			return false;
+		}
+		if (newBlock.header.index !== lastBlock.header.index + 1) {
+			console.log("Invalid index");
+			return false;
+		}
+		if (newBlock.header.prevHash !== lastBlock.hash) {
+			console.log("Invalid prevHash");
+			return false;
+		}
+		if (
+			(newBlock.data.length === 0 &&
+				newBlock.header.merkleRoot !== "0".repeat(64)) ||
+			(newBlock.data.length !== 0 &&
+				newBlock.header.merkleRoot !==
+					merkle("sha256")
+						.sync([JSON.stringify(newBlock.data)])
+						.root())
+		) {
+			console.log("Invalid merkleRoot or data");
+			return false;
+		}
+		if (newBlock.header.timestamp <= lastBlock.header.timestamp) {
+			console.log("Invalid timestamp");
+			return false;
+		}
+		if (
+			newBlock.hash === null ||
+			!newBlock.hash.startsWith("0".repeat(newBlock.header.difficulty))
+		) {
+			console.log("Invalid new block's hash or difficulty");
+			return false;
+		}
+		return true;
+	}
 }
+
+const genesisTransactionData: Transaction = {
+  txIns: [{'signature': '', 'txOutId': '', 'txOutIndex': 0}],
+  txOuts: [{
+      'address': '04875a5ee53110a1ce856f2fc549671456afcc62a510d96cb8e05ca0cb65f78c0b1fb880db8ac195cee93d2d6eff917e795f224d63a2c73319b1ce1e42f27395a4',
+      'amount': 50
+  }],
+  id: 'ff21efb83712a97c5bab8babbf5e7e6b3af9fce90aae1fcf5dbe45e753e594ba'
+};
 
 export { Block, BlockHeader };

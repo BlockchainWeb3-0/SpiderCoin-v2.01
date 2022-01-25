@@ -12,7 +12,7 @@ describe("Block class validation", () => {
   let newBlock: Block | null;
 	beforeEach(() => {
     // * Creates lastBlock
-    data1 = [{ msg: "data1" }, { transaction: [{ tx1: "1" }, { tx2: "2" }] }];
+    data1 = [{ id: "1", txIns: [{txOutId : "1", txOutIndex: 1}], txOuts:[{address: "add1", amount: 10}]}];
     merkleRoot1 = merkle("sha256").sync([JSON.stringify(data1)]).root();
 		blockHeader = new BlockHeader(
       ("2.0.1"),
@@ -25,9 +25,9 @@ describe("Block class validation", () => {
       );
     lastBlock = new Block(blockHeader, merkleRoot1, data1);
 
-    // * Creates minedBlock using function, miningNewBlock()
-    data2 = [{ msg: "data2" }, { transaction: [{ tx3: "3" }, { tx4: "4" }] }];
-    newBlock = Block.mineNewBlock(lastBlock, data2);
+    // * Creates new Block using function, getNewBlock()
+    data2 = [{ id: "2", txIns: [{txOutId : "2", txOutIndex: 2}], txOuts:[{address: "add2", amount: 20}]}];
+    newBlock = Block.getNewBlock(lastBlock, data2);
 	});
 
 	test("Validates new block's type", () => {
@@ -69,16 +69,4 @@ describe("Block class validation", () => {
     const calculatedMerkleRoot = merkle("sha256").sync([JSON.stringify(data2)]).root();
     expect(newBlock.header.merkleRoot).toBe(calculatedMerkleRoot)
 	});
-  
-  // test("simple test", ()=> {
-  //   const data3 = [{ msg: "data1" }, { transaction: [{ tx1: "1" }, { tx2: "2" }] }];
-  //   const data4 = [{ msg: "data2" }, { transaction: [{ tx3: "3" }, { tx4: "4" }] }];
-  //   const merkleRoot3 = merkle("sha256").sync(data3).root();
-  //   const merkleRoot4 = merkle("sha256").sync(data4).root();
-  //   console.log(merkleRoot3);
-  //   console.log(merkleRoot4);
-    
-  //   expect(merkleRoot3).not.toEqual(merkleRoot4);
-  // })
-
 });
