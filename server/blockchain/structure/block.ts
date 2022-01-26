@@ -2,8 +2,6 @@ import fs from "fs";
 import merkle from "merkle";
 import cryptojs from "crypto-js";
 import * as config from "../config";
-import { Hash } from "crypto";
-import { Transaction } from "../transaction/transaction";
 
 /**
  * @brief Block's header class
@@ -125,7 +123,7 @@ class Block {
 	 * @returns genesis block which is the first block of blockchain
 	 */
 	static getGenesisBlock = (): Block => {
-		const data: any[] = [{ transaction: genesisTransactionData }];
+		const data: any[] = [{data: "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"}];
 		const header = new BlockHeader(
 			Block.getVersion(),
 			0,
@@ -302,14 +300,5 @@ class Block {
 		return true;
 	}
 }
-
-const genesisTransactionData: Transaction = {
-  txIns: [{'signature': '', 'txOutId': '', 'txOutIndex': 0}],
-  txOuts: [{
-      'address': '04875a5ee53110a1ce856f2fc549671456afcc62a510d96cb8e05ca0cb65f78c0b1fb880db8ac195cee93d2d6eff917e795f224d63a2c73319b1ce1e42f27395a4',
-      'amount': 50
-  }],
-  id: 'ff21efb83712a97c5bab8babbf5e7e6b3af9fce90aae1fcf5dbe45e753e594ba'
-};
 
 export { Block, BlockHeader };
