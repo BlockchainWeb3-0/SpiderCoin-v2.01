@@ -1,3 +1,4 @@
+export const MINING_REWARD = 50;
 export const INITIAL_DIFFICULTY = 3;
 export const DIFFICULTY_ADJUSTMENT_INTERVAL_SECOND = 10;  // second
 export const DIFFICULTY_ADJUSTMENT_INTERVAL_BLOCK = 10;   // blocks

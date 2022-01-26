@@ -58,4 +58,9 @@ export default class Wallet {
     const privateKey = readFileSync(privateKeyLocation, "utf-8").toString();
     return privateKey;
   }
+
+  static isValidSignature = (address: string, txId: string, txInSign: string ): boolean => {
+    const key = EC.keyFromPublic(address, "encryption");
+		return key.verify(txId, txInSign);
+  }
 }

@@ -1,4 +1,4 @@
-import { TxIn } from "./transaction";
+import { Transaction, TxIn } from "./transaction";
 
 /**
  * @brief Unspent Transaction Input class
@@ -33,7 +33,24 @@ export default class UnspentTxOutput {
 		this.amount = amount;
 	}
 
-  static findUtxo = (txIn: TxIn, utxoList: UnspentTxOutput[]): UnspentTxOutput | undefined => {
-    return utxoList.find(utxo => utxo.txOutId === txIn.txOutId && utxo.txOutIndex === txIn.txOutIndex)
-  }
+	static findUtxo = (
+		txIn: TxIn,
+		utxoList: UnspentTxOutput[]
+	): UnspentTxOutput | undefined => {
+		return utxoList.find(
+			(utxo) =>
+				utxo.txOutId === txIn.txOutId && utxo.txOutIndex === txIn.txOutIndex
+		);
+	};
+
+	static filterConsumedUtxoList = (
+		utxoList: UnspentTxOutput[],
+		txpool: Transaction[]
+	) => {
+    const txIns: TxIn[] = txpool.map(tx => tx.txIns).reduce((a,b) => a.concat(b), []);
+    const consumedUtxoList: UnspentTxOutput[] = [];
+    utxoList.forEach((utxo) => {
+      //TODO txpool에 있는 utxo는 제외해야함
+    })
+  };
 }
