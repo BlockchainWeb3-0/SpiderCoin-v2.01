@@ -246,7 +246,7 @@ class Block {
 	}
 
 	/**
-	 * @brief Validates new block's strucure and header's info(such as prevHash, merkleRoot, ...)
+	 * @brief Validates new block's strucure comparing to last block
 	 * @param newBlock
 	 * @param lastBlock
 	 * @returns true for valid new block / false for invalid new block

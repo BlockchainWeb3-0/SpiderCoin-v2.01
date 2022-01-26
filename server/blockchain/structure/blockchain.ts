@@ -1,6 +1,4 @@
-import merkle from "merkle";
 import { Block } from "./block";
-import * as config from "../config";
 
 import _ from "lodash";
 
@@ -13,15 +11,15 @@ export class Blockchain {
 
 	getLastBlock = (): Block => {
 		return this.blocks[this.blocks.length - 1];
-	}
+	};
 
 	getFirstBlock = (): Block => {
 		return this.blocks[0];
-	}
+	};
 
 	/**
 	 * @brief Add block to blockchain after validation
-	 * @param newBlock 
+	 * @param newBlock
 	 * @returns true when added successfully
 	 */
 	addBlock = (newBlock: Block): boolean => {
@@ -36,10 +34,25 @@ export class Blockchain {
 		if (!Block.isValidNewBlock(newBlock, lastBlock)) {
 			return false;
 		}
-		
+
 		this.blocks.push(newBlock);
 		return true;
-	}
+	};
+
+	/**
+	 * @brief Replace blockchain with new blockchain from other node
+	 * @param newBlocks 
+	 * @returns true when replaced successfully
+	 */
+	replaceBlocks = (newBlocks: Block[]): boolean => {
+		if (!Blockchain.isValidBlocks(newBlocks)) {
+			console.log("Invalid Blocks");
+			return false;
+		}
+
+		this.blocks = newBlocks;
+		return true;
+	};
 
 	/**
 	 * @brief Validates blockchain
@@ -67,14 +80,4 @@ export class Blockchain {
 		}
 		return true;
 	};
-
-	replaceBlocks = (newBlocks: Block[]): boolean => {
-		if (!Blockchain.isValidBlocks(newBlocks)) {
-			console.log("Invalid Blocks");
-			return false;
-		}
-
-		this.blocks = newBlocks;
-		return true;
-	}
 }

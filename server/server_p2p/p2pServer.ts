@@ -50,14 +50,13 @@ const initConnection = (ws: WebSocket) => {
 };
 
 const initErrorHandler = (ws: WebSocket) => {
-  const closeConnection = (ws: WebSocket) => {
-    console.log(`Connection faild to peer: ${ws.url}`);
-    sockets.splice(sockets.indexOf(ws), 1);
-  }
-  ws.on("close", () => closeConnection(ws))
-  ws.on("error", () => closeConnection(ws))
-}
-
+	const closeConnection = (ws: WebSocket) => {
+		console.log(`Connection faild to peer: ${ws.url}`);
+		sockets.splice(sockets.indexOf(ws), 1);
+	};
+	ws.on("close", () => closeConnection(ws));
+	ws.on("error", () => closeConnection(ws));
+};
 
 const initMessageHandler = (ws: WebSocket) => {
 	ws.on("messgae", (data: string) => {
@@ -80,6 +79,8 @@ const initMessageHandler = (ws: WebSocket) => {
 				// get QUERY_ALL_BLOCK message => response blockchain containing all blocks
 				case MessageType.QUERY_ALL_BLOCK:
 					write(ws, responseAllBlocks());
+					break;
+
 				case MessageType.RESPONSE_BLOCKCHAIN:
 					const receivedBlocks: Block[] = JSON.parse(message.data);
 					// ! exception handling : Received block could be null
@@ -91,6 +92,7 @@ const initMessageHandler = (ws: WebSocket) => {
 					}
 					handleBlockchainResponse(receivedBlocks);
 					break;
+
 				default:
 					break;
 			}
@@ -98,15 +100,6 @@ const initMessageHandler = (ws: WebSocket) => {
 			console.error(error);
 		}
 	});
-};
-
-/**
- * @brief sends a json type message to websocket
- * @param ws websocket
- * @param message
- */
-const write = (ws: WebSocket, message: Message) => {
-	ws.send(JSON.stringify(message));
 };
 
 const handleBlockchainResponse = (receivedBlocks: Block[]) => {
@@ -119,9 +112,7 @@ const handleBlockchainResponse = (receivedBlocks: Block[]) => {
 	 *  3. shorter than mine
 	 */
 	if (receivedBlocks.length === 0) {
-		console.log(
-			"No blocks in received blockchain"
-		);
+		console.log("No blocks in received blockchain");
 		return;
 	}
 
@@ -152,9 +143,18 @@ const handleBlockchainResponse = (receivedBlocks: Block[]) => {
 			broadcast(queryAllBlocks());
 		} else {
 			console.log("Received block is longer than holding blockchain");
-      blockchain.replaceBlocks(receivedBlocks);
+			blockchain.replaceBlocks(receivedBlocks);
 		}
 	}
+};
+
+/**
+ * @brief sends a json type message to websocket
+ * @param ws websocket
+ * @param message
+ */
+const write = (ws: WebSocket, message: Message) => {
+	ws.send(JSON.stringify(message));
 };
 
 /**
@@ -170,17 +170,17 @@ const queryLastBlock = (): Message => ({
 	data: null,
 });
 
-const queryAllBlocks = () => ({
+const queryAllBlocks = (): Message => ({
 	type: MessageType.QUERY_ALL_BLOCK,
 	data: null,
 });
 
-const responseLastBlock = () => ({
+const responseLastBlock = (): Message => ({
 	type: MessageType.RESPONSE_BLOCKCHAIN,
 	data: JSON.stringify(blockchain.getLastBlock()),
 });
 
-const responseAllBlocks = () => ({
+const responseAllBlocks = (): Message => ({
 	type: MessageType.RESPONSE_BLOCKCHAIN,
 	data: JSON.stringify(blockchain.blocks),
 });
