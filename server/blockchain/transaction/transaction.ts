@@ -47,15 +47,15 @@ class TxIn {
 		return {...unsignedTxIn, signature: Wallet.signWithPrivateKey(privateKey, txId)}
 	}
 
-	static getSignedTxInList = (unsginedTxIn: TxIn[], utxoListToBeUsed: UnspentTxOutput[], privateKey: string, txId: string): TxIn[] => {
-		return unsginedTxIn.map((unsignedTxIn: TxIn) => {
-			const referencedUtxo = UnspentTxOutput.findUtxoMatchesTxIn(unsignedTxIn, utxoListToBeUsed);
-			if(referencedUtxo === undefined) {
+	static getSignedTxInList = (unsignedTxInList: TxIn[], utxoListToBeUsed: UnspentTxOutput[], privateKey: string, txId: string): TxIn[] => {
+		return unsignedTxInList.map((unsignedTxIn: TxIn) => {
+			const utxoMatchesTxIn = UnspentTxOutput.findUtxoMatchesTxIn(unsignedTxIn, utxoListToBeUsed);
+			if(utxoMatchesTxIn === undefined) {
 				const errMsg = "Cannot find UTxO which matches TxIn"
 				console.log(errMsg);
 				throw Error(errMsg);
 			}
-			if(Wallet.getPublicKeyFromPrivateKey(privateKey) !== referencedUtxo.address) {
+			if(Wallet.getPublicKeyFromPrivateKey(privateKey) !== utxoMatchesTxIn.address) {
 				const errMsg = "Invalid private key." 
 				console.log(errMsg);
 				throw Error(errMsg);
@@ -348,6 +348,16 @@ class Transaction {
 		return rewardTx;
 	};
 
+
+	/**
+	 * @brief Find available UTxOs and create new transaction with signature
+	 * @param receiverAddress 	
+	 * @param sendingAmount 
+	 * @param privateKey 
+	 * @param utxoList 
+	 * @param txpool 
+	 * @returns 
+	 */
 	static createTransaction = (
 		receiverAddress: string,
 		sendingAmount: number,
@@ -390,7 +400,8 @@ class Transaction {
 	
 		// 6. Gets Transaction Inputs' signature
 		const newSignedTx: Transaction = {...newUnsignedTx};
-		newSignedTx.txIns = TxIn.getSignedTxInList(newUnsignedTx.txIns, utxoListToBeUsed, privateKey, newUnsignedTx.id)
+		const newSignedTxIns = TxIn.getSignedTxInList(newUnsignedTx.txIns, utxoListToBeUsed, privateKey, newUnsignedTx.id) 
+		newSignedTx.txIns = newSignedTxIns
 		
 		return newSignedTx;
 	};
