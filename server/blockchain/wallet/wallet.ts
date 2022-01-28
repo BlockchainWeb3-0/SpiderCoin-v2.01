@@ -10,57 +10,76 @@ const privateKeyLocation = privateKeyFolderPath + privateKeyFileName;
 
 
 export default class Wallet {
-  static initWallet = () => {
-    if(existsSync(privateKeyLocation)){
-      console.log("Wallet already exists.");
-      return;
-    }
-    this.createNewWallet();
-  }
-  
-  static createNewWallet = () => {
-    if(!existsSync(privateKeyFolderPath)) {
-      mkdirSync(privateKeyFolderPath, { recursive: true });
-    }
-    const newPrivateKey: string = this.generatePrivatekey();
-    writeFileSync(privateKeyLocation, newPrivateKey);
-    console.log("New wallet with private key is created!");
-    console.log(`Path : ${privateKeyLocation}`);
-  }
-  
-  static deleteWallet = () => {
-    if(existsSync(privateKeyLocation)) {
-      unlinkSync(privateKeyLocation);
-    }
-    console.log("Cannot find wallet");
-  }
+	static initWallet = () => {
+		if (existsSync(privateKeyLocation)) {
+			console.log("Wallet already exists.");
+			return;
+		}
+		this.createNewWallet();
+	};
 
-  static generatePrivatekey = (): string => {
-    const keyPair = EC.genKeyPair();
-    const privateKey = keyPair.getPrivate().toString(16);
-    return privateKey;
-  }
+	static createNewWallet = () => {
+		if (!existsSync(privateKeyFolderPath)) {
+			mkdirSync(privateKeyFolderPath, { recursive: true });
+		}
+		const newPrivateKey: string = this.generatePrivatekey();
+		writeFileSync(privateKeyLocation, newPrivateKey);
+		console.log("New wallet with private key is created!");
+		console.log(`Path : ${privateKeyLocation}`);
+	};
 
-  static getPublicKeyFromPrivateKey = (privateKey: string): string => {
-    const key = EC.keyFromPrivate(privateKey, "hex");
-    const publicKey = key.getPublic().encode("hex", false);
-    return publicKey;
-  }
+	static deleteWallet = () => {
+		if (existsSync(privateKeyLocation)) {
+			unlinkSync(privateKeyLocation);
+		}
+		console.log("Cannot find wallet");
+	};
 
-  static getWalletPublicKey = (): string => {
-    const privateKey = this.readPrivateKeyFromWallet();
-    const key = EC.keyFromPrivate(privateKey, "hex");
-    const publicKey = key.getPublic().encode("hex", false);
-    return publicKey;
-  }
+	static generatePrivatekey = (): string => {
+		const keyPair = EC.genKeyPair();
+		const privateKey = keyPair.getPrivate().toString(16);
+		return privateKey;
+	};
 
-  static readPrivateKeyFromWallet = (): string => {
-    const privateKey = readFileSync(privateKeyLocation, "utf-8").toString();
-    return privateKey;
-  }
+	static getPublicKeyFromPrivateKey = (privateKey: string): string => {
+		const key = EC.keyFromPrivate(privateKey, "hex");
+		const publicKey = key.getPublic().encode("hex", false);
+		return publicKey;
+	};
 
-  static isValidSignature = (address: string, txId: string, txInSign: string ): boolean => {
-    const key = EC.keyFromPublic(address, "encryption");
+	static getWalletPublicKey = (): string => {
+		const privateKey = this.readPrivateKeyFromWallet();
+		const key = EC.keyFromPrivate(privateKey, "hex");
+		const publicKey = key.getPublic().encode("hex", false);
+		return publicKey;
+	};
+
+	static readPrivateKeyFromWallet = (): string => {
+		const privateKey = readFileSync(privateKeyLocation, "utf-8").toString();
+		return privateKey;
+	};
+
+	static isValidSignature = (
+		address: string,
+		txId: string,
+		txInSign: string
+	): boolean => {
+		const key = EC.keyFromPublic(address, "hex");
 		return key.verify(txId, txInSign);
-  }
+	};
+
+	static decimalArrayToHexString = (decimalArray: number[]): string => {
+		return Array.from(decimalArray, (decimal) =>
+			("0" + (decimal & 0xff).toString(16)).slice(-2)
+		).join("");
+	};
+
+	static signWithPrivateKey = (privateKey: string, txId: string): string => {
+		const key = EC.keyFromPrivate(privateKey, "hex");
+		const signature: string = this.decimalArrayToHexString(
+			key.sign(txId).toDER()
+		);
+		return signature;
+	};
 }
+

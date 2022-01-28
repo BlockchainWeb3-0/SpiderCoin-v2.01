@@ -30,7 +30,7 @@ class TxIn {
 	/**
 	 * @brief Create new TxIn with empty signature
 	 * @param utxo
-	 * @returns
+	 * @returns Transaction input with empty signature
 	 */
 	static createUnSignedTxIn = (utxo: UnspentTxOutput): TxIn => {
 		const txIn = new TxIn(utxo.txOutId, utxo.txOutIndex, "");
@@ -42,6 +42,28 @@ class TxIn {
 		txIns = utxoList.map(this.createUnSignedTxIn);
 		return txIns;
 	};
+
+	static signToTxIn = (unsignedTxIn:TxIn, privateKey:string, txId: string): TxIn => {
+		return {...unsignedTxIn, signature: Wallet.signWithPrivateKey(privateKey, txId)}
+	}
+
+	static getSignedTxInList = (unsginedTxIn: TxIn[], utxoListToBeUsed: UnspentTxOutput[], privateKey: string, txId: string): TxIn[] => {
+		return unsginedTxIn.map((unsignedTxIn: TxIn) => {
+			const referencedUtxo = UnspentTxOutput.findUtxoMatchesTxIn(unsignedTxIn, utxoListToBeUsed);
+			if(referencedUtxo === undefined) {
+				const errMsg = "Cannot find UTxO which matches TxIn"
+				console.log(errMsg);
+				throw Error(errMsg);
+			}
+			if(Wallet.getPublicKeyFromPrivateKey(privateKey) !== referencedUtxo.address) {
+				const errMsg = "Invalid private key." 
+				console.log(errMsg);
+				throw Error(errMsg);
+			}
+			const signedTxIn: TxIn = this.signToTxIn(unsignedTxIn, privateKey, txId);
+			return signedTxIn;
+		}) 
+	}
 
 	static isValidTxInStructure = (txIn: TxIn): boolean => {
 		if (txIn === null || txIn === undefined) {
@@ -116,6 +138,12 @@ class TxIn {
 		}
 		return utxoFound.amount;
 	};
+
+	static getTxInsTotalAmount = (txIns: TxIn[], utxo: UnspentTxOutput[]): number => {
+		return txIns
+			.map((txIn) => TxIn.getTxInAmount(txIn, utxo))
+			.reduce((a, b) => a + b, 0);
+	}
 }
 
 /**
@@ -285,9 +313,7 @@ class Transaction {
 			.reduce((a, b) => a && b, true);
 
 		// check if txIns total amount === txOuts total amount
-		const txInsTotalAmount = tx.txIns
-			.map((txIn) => TxIn.getTxInAmount(txIn, utxoList))
-			.reduce((a, b) => a + b, 0);
+		const txInsTotalAmount = TxIn.getTxInsTotalAmount(tx.txIns, utxoList);
 		const txOutsTotalAmount = tx.txOuts
 			.map((txOut) => txOut.amount)
 			.reduce((a, b) => a + b, 0);
@@ -329,18 +355,18 @@ class Transaction {
 		utxoList: UnspentTxOutput[],
 		txpool: Transaction[]
 	): Transaction | null => {
-		// 1. get myUtxoList from utxoList
+		// 1. Gets myUtxoList from utxoList
 		const myAddress: string = Wallet.getPublicKeyFromPrivateKey(privateKey);
 		const myUtxoList: UnspentTxOutput[] = UnspentTxOutput.findMyUtxoList(
 			myAddress,
 			utxoList
 		);
 
-		// 2. Check if myUtxo is already used and filter it
+		// 2. Checks if myUtxo is already used and filter it
 		const avaliableMyUtxoList: UnspentTxOutput[] =
 			UnspentTxOutput.filterConsumedMyUtxoList(myUtxoList, txpool);
 
-		// 3. get available UTxOs equal to or greater than sending amount
+		// 3. Gets available UTxOs equal to or greater than sending amount
 		const { utxoListToBeUsed, leftOverAmount } =
 			UnspentTxOutput.getUtxosForSending(avaliableMyUtxoList, sendingAmount);
 
@@ -349,20 +375,24 @@ class Transaction {
 			return null;
 		}
 
-		// 4. put new tx into txpool
-		//TODO 새로 만든 tx를 txpool에 넣기
-		const newUnsignedTxIns: TxIn[] = utxoListToBeUsed.map((utxo) =>
-			TxIn.createUnSignedTxIn(utxo)
-		);
-
+		// 4. Creates Transaction without Id and signatures
+		const newUnsignedTxIns: TxIn[] = TxIn.getUnSginedTxInList(utxoListToBeUsed);
 		const newTxOuts: TxOut[] = TxOut.createTxOuts(
 			receiverAddress,
 			sendingAmount,
 			myAddress,
 			leftOverAmount
 		);
-		const newTx: Transaction = new Transaction("", newUnsignedTxIns, newTxOuts);
-		return newTx;
+
+		// 5. Calculates Transaction Id
+		const newUnsignedTx: Transaction = new Transaction("", newUnsignedTxIns, newTxOuts);
+		newUnsignedTx.id = Transaction.calTxId(newUnsignedTx);
+	
+		// 6. Gets Transaction Inputs' signature
+		const newSignedTx: Transaction = {...newUnsignedTx};
+		newSignedTx.txIns = TxIn.getSignedTxInList(newUnsignedTx.txIns, utxoListToBeUsed, privateKey, newUnsignedTx.id)
+		
+		return newSignedTx;
 	};
 }
 
