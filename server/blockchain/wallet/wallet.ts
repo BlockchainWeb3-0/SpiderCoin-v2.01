@@ -45,7 +45,7 @@ export default class Wallet {
 		const keyPair = EC.genKeyPair();
 		const privateKey = keyPair.getPrivate().toString(16);
     const publicKey = this.getPublicKeyFromPrivateKey(privateKey);
-		return [privateKey, publicKey];
+		return {privateKey, publicKey};
 	};
 
 	static getPublicKeyFromPrivateKey = (privateKey: string): string => {

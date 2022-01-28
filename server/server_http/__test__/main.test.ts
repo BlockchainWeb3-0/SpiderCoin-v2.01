@@ -1,59 +1,34 @@
-import axios from "axios"
-import { Transaction } from "../../blockchain/transaction/transaction";
-import Wallet from "../../blockchain/wallet/wallet";
+import axios from "axios";
 
+describe("Rotuers test", () => {
 
-describe("transaction router test", () => {
-  describe("create", () => {
-    let receiverAddress: string;
-    let sendingAmount: number;
-    let senderAddress: string;
-    let privateKey: string;
+  let routerParams: object;
 
-    beforeAll(async () => {
-      // create test utxo list
-      const params: object = {
-        method: "get",
-        baseURL: "http://localhost:3001",
-        url: "/utxos/create/test",
-      }
-      await axios.request(params);
-    })
-    beforeEach(() => {
-      receiverAddress = "04d2d156b54c47d0ad7acca55ad5e484eb0191a6d783e7473037d4d9f4af66455ee937826090e71dbbacc0a7e7540d2850f92812bce1f87180cac3900541794274";
-      senderAddress = Wallet.getPulicKeyFromWallet();
-      privateKey = Wallet.getPrivateKeyFromWallet();
-      sendingAmount = 10;
-    })
-    test("", async () => {
-      const params: object = {
-        method: "post",
-        baseURL: "http://localhost:3001",
-        url: "/transaction/create",
-        data: {
-          receiverAddress, 
-          sendingAmount, 
-          senderAddress, 
-          privateKey
-        }
-      }
-      const result = await axios.request(params);
-      const tx: Transaction = result.data;
-      if (tx === null) {
-        expect(tx).toBe(null)
-      } else  {
-        expect(tx.txOuts[0].address).toBe(receiverAddress);
-      }
-    })
+	beforeEach(() => {
+    routerParams = {
+      method: "get",
+      baseURL: "http://localhost:3001",
+    };
+	});
 
-    afterAll(async() => {
-      // clear utxo list
-      const params: object = {
-        method: "get",
-        baseURL: "http://localhost:3001",
-        url: "/utxos/clear/test",
-      }
-      await axios.request(params);
-    })
-  })
-})
+	// * transactionRouter
+	describe("transaction router connection test", () => {
+		test("GET: /transaction/", async () => {
+			routerParams = {...routerParams, url: "/transaction"}
+			const result = await axios.request(routerParams);
+			
+			expect(result.status).toBe(200);
+		});
+	});
+
+	// * utxosRouter
+	describe("utxos Router connection test", () => {
+		test("GET : /utxos", async () => {
+			routerParams = {...routerParams, url: "/utxos"}
+			const result = await axios.request(routerParams);
+      
+      expect(result.status).toBe(200);
+		});
+	});
+});
+
