@@ -150,6 +150,34 @@ class TxOut {
 		}
 		return true;
 	};
+
+	/**
+	 * @brief Create txOutput list to put into new transaction.
+	 * @param receiverAddress receiver's public key
+	 * @param sendingAmount how much would like to send
+	 * @param senderAddress sender's public key
+	 * @param leftOverAmount used UTxO's total amount - sending amount
+	 * @returns1 only sendingTxOut if leftOverAmount is 0
+	 * @returns2	otherwise returns sendingTxOut and refundTxOut
+	 */
+	static createTxOuts = (
+		receiverAddress: string,
+		sendingAmount: number,
+		senderAddress: string,
+		leftOverAmount: number
+	): TxOut[] => {
+		// 1. create txOut for sending
+		const sendingTxOut = new TxOut(receiverAddress, sendingAmount);
+		if (leftOverAmount === 0) {
+			return [sendingTxOut];
+		}
+
+		// 2. create txOut for refund if leftOver amount is not 0
+		// (this txOut will be one of the next unspent TxOutputs)
+		const refundTxOut = new TxOut(senderAddress, leftOverAmount);
+
+		return [sendingTxOut, refundTxOut];
+	};
 }
 
 /**
@@ -192,7 +220,7 @@ class Transaction {
 
 	static isValidTxStructure = (tx: Transaction): boolean => {
 		/**
-		 * Validates 
+		 * Validates
 		 * 1. null or undefined
 		 * 2. type of id
 		 * 3. type of txIns and txIn
@@ -212,25 +240,28 @@ class Transaction {
 			return false;
 		}
 
-		const isValidTxInStructure: boolean = tx.txIns.map((txIn) => TxIn.isValidTxInStructure(txIn)).reduce((a,b) => a&&b, true);
+		const isValidTxInStructure: boolean = tx.txIns
+			.map((txIn) => TxIn.isValidTxInStructure(txIn))
+			.reduce((a, b) => a && b, true);
 		if (!isValidTxInStructure) {
 			console.log("Wrong type of txIn found");
 			return false;
 		}
 
-
 		if (!(tx.txOuts instanceof Array)) {
 			console.log("Wrong type of txOuts");
 			return false;
 		}
-		const isValidTxOutStructure: boolean = tx.txIns.map((txIn) => TxIn.isValidTxInStructure(txIn)).reduce((a,b) => a&&b, true);
+		const isValidTxOutStructure: boolean = tx.txIns
+			.map((txIn) => TxIn.isValidTxInStructure(txIn))
+			.reduce((a, b) => a && b, true);
 		if (!isValidTxOutStructure) {
 			console.log("Wrong type of txOut found");
 			return false;
 		}
 
 		return true;
-	}
+	};
 
 	/**
 	 * @brief Validates transaction
@@ -296,25 +327,43 @@ class Transaction {
 		sendingAmount: number,
 		privateKey: string,
 		utxoList: UnspentTxOutput[],
-		txpool: Transaction[],
-	) => {
+		txpool: Transaction[]
+	): Transaction | null => {
 		// 1. get myUtxoList from utxoList
 		const myAddress: string = Wallet.getPublicKeyFromPrivateKey(privateKey);
-		const myUtxoList: UnspentTxOutput[] = UnspentTxOutput.findMyUtxoList(myAddress, utxoList);
+		const myUtxoList: UnspentTxOutput[] = UnspentTxOutput.findMyUtxoList(
+			myAddress,
+			utxoList
+		);
 
 		// 2. Check if myUtxo is already used and filter it
-		const avaliableMyUtxoList: UnspentTxOutput[] = UnspentTxOutput.filterConsumedMyUtxoList(myUtxoList, txpool)
-		
-		// 3. get available UTxOs equal to or greater than sending amount 
-		//TODO amount에 맞게 utxo를 불러오기
-		const {utxoToBeUsed, leftOverAmount} = UnspentTxOutput.getUtxosForSending(avaliableMyUtxoList, sendingAmount);
+		const avaliableMyUtxoList: UnspentTxOutput[] =
+			UnspentTxOutput.filterConsumedMyUtxoList(myUtxoList, txpool);
+
+		// 3. get available UTxOs equal to or greater than sending amount
+		const { utxoListToBeUsed, leftOverAmount } =
+			UnspentTxOutput.getUtxosForSending(avaliableMyUtxoList, sendingAmount);
+
+		// ! Exceptio handling : cannot create transaction from the available UTxO list
+		if (utxoListToBeUsed === null || leftOverAmount === null) {
+			return null;
+		}
 
 		// 4. put new tx into txpool
 		//TODO 새로 만든 tx를 txpool에 넣기
+		const newUnsignedTxIns: TxIn[] = utxoListToBeUsed.map((utxo) =>
+			TxIn.createUnSignedTxIn(utxo)
+		);
 
+		const newTxOuts: TxOut[] = TxOut.createTxOuts(
+			receiverAddress,
+			sendingAmount,
+			myAddress,
+			leftOverAmount
+		);
+		const newTx: Transaction = new Transaction("", newUnsignedTxIns, newTxOuts);
+		return newTx;
 	};
 }
-
-
 
 export { Transaction, TxIn, TxOut };

@@ -87,15 +87,15 @@ export default class UnspentTxOutput {
   };
 
 	static getUtxosForSending = (availableMyUtxoList: UnspentTxOutput[], sendingAmount: number) => {
-		const utxoToBeUsed: UnspentTxOutput[] = [];
+		const utxoListToBeUsed: UnspentTxOutput[] = [];
 		let utxoTotalAmount = 0;
 		for (const myUtxo of availableMyUtxoList) {
 			utxoTotalAmount += myUtxo.amount;
 			
-			utxoToBeUsed.push(myUtxo);
+			utxoListToBeUsed.push(myUtxo);
 			if (utxoTotalAmount >= sendingAmount) {
 				const leftOverAmount = utxoTotalAmount - sendingAmount; 
-				return {utxoToBeUsed, leftOverAmount};
+				return {utxoListToBeUsed, leftOverAmount};
 			}
 		}
 		// 여기서 forEach를 사용해서 return을 하려고 했는데,
@@ -106,6 +106,6 @@ export default class UnspentTxOutput {
 		console.log("Cannot create transaction from the available UTxO list");
 		console.log(`Require amount : ${sendingAmount}`);
 		console.log(`Total amount in available UTxO list : ${utxoTotalAmount}`);	
-		return {utxoToBeUsed : [], leftOverAmount: 0}
+		return {utxoListToBeUsed : null, leftOverAmount: null}
 	}
 }

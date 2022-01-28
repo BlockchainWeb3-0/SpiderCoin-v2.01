@@ -36,13 +36,13 @@ describe("UnspentTxOut class", () => {
 				myUtxo.push(utxo);
 			}
 		});
-		test("test", () => {
+		test("availableMyUtxoList are not part of transaction pool, there are no common things", () => {
 			const everyTxIns: TxIn[] =
 				TransactionPool.getEveryTxInsFromTxpool(txpool);
-			const usableMyUtxoList: UnspentTxOutput[] =
+			const availableMyUtxoList: UnspentTxOutput[] =
 				UnspentTxOutput.filterConsumedMyUtxoList(myUtxo, txpool);
 			const commonList = [];
-			usableMyUtxoList.forEach((utxo) =>
+			availableMyUtxoList.forEach((utxo) =>
 				everyTxIns.forEach((txIn) => {
 					if (
 						txIn.txOutId === utxo.txOutId &&
@@ -67,13 +67,13 @@ describe("UnspentTxOut class", () => {
 			// availableMyUtxoList got 2, 4, 6, 8 ,10
 		});
 		test("If sending amount is 10, leftOver amount is 2 ((2+4+6) - 10) ", () => {
-			const { utxoToBeUsed, leftOverAmount } =
-				UnspentTxOutput.getUtxosForSending(
-					availableMyUtxoList,
-					sendingAmount 
-				);
-			expect(leftOverAmount).toBe(2);
-			expect(utxoToBeUsed.length).toEqual(3);
+			const { utxoListToBeUsed, leftOverAmount } =
+				UnspentTxOutput.getUtxosForSending(availableMyUtxoList, sendingAmount);
+
+			if (utxoListToBeUsed !== null) {
+				expect(leftOverAmount).toBe(2);
+				expect(utxoListToBeUsed.length).toEqual(3);
+			}
 		});
 	});
 });
