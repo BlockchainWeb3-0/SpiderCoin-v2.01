@@ -3,11 +3,10 @@ import WebSocket from "ws";
 import { Server } from "ws";
 import { Block } from "../blockchain/structure/block";
 import { Blockchain } from "../blockchain/structure/blockchain";
+import GlobalVar from "../blockchain/globalVar";
 
 const sockets: WebSocket[] = [];
 const port = parseInt(process.env.P2P_PORT as string) || 6001;
-
-const blockchain: Blockchain = new Blockchain();
 
 enum MessageType {
 	QUERY_LAST_BLOCK,
@@ -117,7 +116,7 @@ const handleBlockchainResponse = (receivedBlocks: Block[]) => {
 	}
 
 	const lastBlockReceived: Block = receivedBlocks[receivedBlocks.length - 1];
-	const lastBlockHeld: Block = blockchain.getLastBlock();
+	const lastBlockHeld: Block = GlobalVar.blockchain.getLastBlock();
 
 	if (!Block.isValidBlockStructure(lastBlockReceived)) {
 		console.log("Invalid Block structure");
@@ -132,7 +131,7 @@ const handleBlockchainResponse = (receivedBlocks: Block[]) => {
 
 		if (lastBlockHeld.hash === lastBlockReceived.header.prevHash) {
 			// Peer got new block, so need to add block to holding blockchain
-			const addSuccess = blockchain.addBlock(lastBlockReceived);
+			const addSuccess = GlobalVar.blockchain.addBlock(lastBlockReceived);
 			if (addSuccess) {
 				console.log("Add received block to holding blockchain successfully");
 				broadcast(responseLastBlock());
@@ -143,7 +142,7 @@ const handleBlockchainResponse = (receivedBlocks: Block[]) => {
 			broadcast(queryAllBlocks());
 		} else {
 			console.log("Received block is longer than holding blockchain");
-			blockchain.replaceBlocks(receivedBlocks);
+			GlobalVar.blockchain.replaceBlocks(receivedBlocks);
 		}
 	}
 };
@@ -177,12 +176,12 @@ const queryAllBlocks = (): Message => ({
 
 const responseLastBlock = (): Message => ({
 	type: MessageType.RESPONSE_BLOCKCHAIN,
-	data: JSON.stringify(blockchain.getLastBlock()),
+	data: JSON.stringify(GlobalVar.blockchain.getLastBlock()),
 });
 
 const responseAllBlocks = (): Message => ({
 	type: MessageType.RESPONSE_BLOCKCHAIN,
-	data: JSON.stringify(blockchain.blocks),
+	data: JSON.stringify(GlobalVar.blockchain.blocks),
 });
 
 // TODO : define functions for transaction pool query and response

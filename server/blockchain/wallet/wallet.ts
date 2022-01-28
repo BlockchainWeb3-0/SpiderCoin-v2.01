@@ -41,20 +41,27 @@ export default class Wallet {
 		return privateKey;
 	};
 
+	static generatePrivatePublicKeys = () => {
+		const keyPair = EC.genKeyPair();
+		const privateKey = keyPair.getPrivate().toString(16);
+    const publicKey = this.getPublicKeyFromPrivateKey(privateKey);
+		return [privateKey, publicKey];
+	};
+
 	static getPublicKeyFromPrivateKey = (privateKey: string): string => {
 		const key = EC.keyFromPrivate(privateKey, "hex");
 		const publicKey = key.getPublic().encode("hex", false);
 		return publicKey;
 	};
 
-	static getWalletPublicKey = (): string => {
-		const privateKey = this.readPrivateKeyFromWallet();
+	static getPulicKeyFromWallet = (): string => {
+		const privateKey = this.getPrivateKeyFromWallet();
 		const key = EC.keyFromPrivate(privateKey, "hex");
 		const publicKey = key.getPublic().encode("hex", false);
 		return publicKey;
 	};
 
-	static readPrivateKeyFromWallet = (): string => {
+	static getPrivateKeyFromWallet = (): string => {
 		const privateKey = readFileSync(privateKeyLocation, "utf-8").toString();
 		return privateKey;
 	};

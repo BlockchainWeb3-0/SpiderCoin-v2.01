@@ -37,7 +37,7 @@ export default class UnspentTxOutput {
 
 	/**
 	 * @brief Find specific address's UTxO List
-	 * @param myAddress address you are looking for
+	 * @param myAddress sender's address
 	 * @param utxoList list of all utxo
 	 * @returns Found UTxO list or empty list if nothing found
 	 */

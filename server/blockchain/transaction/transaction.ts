@@ -3,6 +3,7 @@ import _ from "lodash";
 import UnspentTxOutput from "./unspentTxOutput";
 import Wallet from "../wallet/wallet";
 import * as config from "../config";
+import GlobalVar from "../globalVar";
 
 /**
  * @brief Transaction Input class
@@ -351,8 +352,9 @@ class Transaction {
 
 	/**
 	 * @brief Find available UTxOs and create new transaction with signature
-	 * @param receiverAddress 	
+	 * @param receiverAddress 
 	 * @param sendingAmount 
+	 * @param senderAddress 
 	 * @param privateKey 
 	 * @param utxoList 
 	 * @param txpool 
@@ -361,11 +363,16 @@ class Transaction {
 	static createTransaction = (
 		receiverAddress: string,
 		sendingAmount: number,
+		senderAddress: string,
 		privateKey: string,
 		utxoList: UnspentTxOutput[],
 		txpool: Transaction[]
 	): Transaction | null => {
 		// 1. Gets myUtxoList from utxoList
+		if(senderAddress !== Wallet.getPublicKeyFromPrivateKey(privateKey)) {
+			console.log("Sender's address and privateKey are not paired.");
+			return null;
+		}
 		const myAddress: string = Wallet.getPublicKeyFromPrivateKey(privateKey);
 		const myUtxoList: UnspentTxOutput[] = UnspentTxOutput.findMyUtxoList(
 			myAddress,

@@ -2,17 +2,17 @@ import _ from "lodash";
 import { Transaction, TxIn } from "./transaction";
 
 export default class TransactionPool {
-  public txpool: Transaction[];
+  public txList: Transaction[];
   
-  constructor(){
-    this.txpool = [];
+  constructor() {
+    this.txList = [];
   }
 
   static deepCopyTxPool = (txpool: Transaction) => {
     return _.cloneDeep(txpool);
   }
 
-  static addTxPool = (newTx: Transaction, txpool: TransactionPool) => {
+  addTxPool = (newTx: Transaction, txpool: TransactionPool) => {
     /**
      * validates
      * 1. transaction
@@ -26,5 +26,3 @@ export default class TransactionPool {
 		return txpool.map(tx => tx.txIns).reduce((a,b)=>a.concat(b), []);
 	}
 }
-
-const txpool = new TransactionPool();
