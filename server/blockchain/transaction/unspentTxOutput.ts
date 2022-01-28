@@ -1,4 +1,6 @@
+import _ from "lodash";
 import { Transaction, TxIn } from "./transaction";
+import TransactionPool from "./transactionPool";
 
 /**
  * @brief Unspent Transaction Input class
@@ -33,7 +35,27 @@ export default class UnspentTxOutput {
 		this.amount = amount;
 	}
 
-	static findUtxo = (
+	/**
+	 * @brief Find specific address's UTxO List
+	 * @param myAddress address you are looking for
+	 * @param utxoList list of all utxo
+	 * @returns Found UTxO list or empty list if nothing found
+	 */
+	static findMyUtxoList = (myAddress: string, utxoList: UnspentTxOutput[]): UnspentTxOutput[] => {
+		const myUtxoList = utxoList.filter((utxo) => utxo.address === myAddress);
+		if (myUtxoList === undefined) {
+			return []
+		}
+		return myUtxoList;
+	}
+
+  /**
+   * @brief Find UTxO that matches txIn from utxoList
+   * @param txIn Transaction input
+   * @param utxoList Unspent Tx output list
+   * @returns UTxO same with txIn
+   */
+	static findUtxoMatchesTxIn = (
 		txIn: TxIn,
 		utxoList: UnspentTxOutput[]
 	): UnspentTxOutput | undefined => {
@@ -43,14 +65,47 @@ export default class UnspentTxOutput {
 		);
 	};
 
-	static filterConsumedUtxoList = (
-		utxoList: UnspentTxOutput[],
+	
+	static filterConsumedMyUtxoList = (
+		myUtxoList: UnspentTxOutput[],
 		txpool: Transaction[]
 	) => {
-    const txIns: TxIn[] = txpool.map(tx => tx.txIns).reduce((a,b) => a.concat(b), []);
+		// Get all txIn list from transaction list
+    const everyTxIns: TxIn[] = TransactionPool.getEveryTxInsFromTxpool(txpool);
     const consumedUtxoList: UnspentTxOutput[] = [];
-    utxoList.forEach((utxo) => {
-      //TODO txpool에 있는 utxo는 제외해야함
-    })
+
+		// find consumed myUtxo and push it into consumedUtxoList
+		everyTxIns.forEach((txIn) => {
+			myUtxoList.forEach((myUtxo) => {
+				if(myUtxo.txOutId == txIn.txOutId && myUtxo.txOutIndex === txIn.txOutIndex){
+					consumedUtxoList.push(myUtxo);
+				} 
+			})
+		})
+
+		return _.without(myUtxoList, ...consumedUtxoList);
   };
+
+	static getUtxosForSending = (availableMyUtxoList: UnspentTxOutput[], sendingAmount: number) => {
+		const utxoToBeUsed: UnspentTxOutput[] = [];
+		let utxoTotalAmount = 0;
+		for (const myUtxo of availableMyUtxoList) {
+			utxoTotalAmount += myUtxo.amount;
+			
+			utxoToBeUsed.push(myUtxo);
+			if (utxoTotalAmount >= sendingAmount) {
+				const leftOverAmount = utxoTotalAmount - sendingAmount; 
+				return {utxoToBeUsed, leftOverAmount};
+			}
+		}
+		// 여기서 forEach를 사용해서 return을 하려고 했는데,
+		// forEach 안에서 return은 forEach의 반환값을 지정할 뿐,
+		// 현재 함수의 반환값을 지정하지 않는다.
+		// 따라서 이런 상황에서는 for of를 사용하는 것이 낫다.
+
+		console.log("Cannot create transaction from the available UTxO list");
+		console.log(`Require amount : ${sendingAmount}`);
+		console.log(`Total amount in available UTxO list : ${utxoTotalAmount}`);	
+		return {utxoToBeUsed : [], leftOverAmount: 0}
+	}
 }

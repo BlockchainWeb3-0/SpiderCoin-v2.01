@@ -1,7 +1,7 @@
 import _ from "lodash";
-import { Transaction } from "./transaction";
+import { Transaction, TxIn } from "./transaction";
 
-class TransactionPool {
+export default class TransactionPool {
   public txpool: Transaction[];
   
   constructor(){
@@ -21,6 +21,10 @@ class TransactionPool {
      */
     
   }
+
+  static getEveryTxInsFromTxpool = (txpool: Transaction[]): TxIn[] => {
+		return txpool.map(tx => tx.txIns).reduce((a,b)=>a.concat(b), []);
+	}
 }
 
 const txpool = new TransactionPool();
