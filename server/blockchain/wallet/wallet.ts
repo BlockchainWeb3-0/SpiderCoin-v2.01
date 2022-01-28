@@ -22,7 +22,7 @@ export default class Wallet {
 		if (!existsSync(privateKeyFolderPath)) {
 			mkdirSync(privateKeyFolderPath, { recursive: true });
 		}
-		const newPrivateKey: string = this.generatePrivatekey();
+		const newPrivateKey: string = this.generatePrivatePublicKeys().privateKey;
 		writeFileSync(privateKeyLocation, newPrivateKey);
 		console.log("New wallet with private key is created!");
 		console.log(`Path : ${privateKeyLocation}`);
@@ -33,12 +33,6 @@ export default class Wallet {
 			unlinkSync(privateKeyLocation);
 		}
 		console.log("Cannot find wallet");
-	};
-
-	static generatePrivatekey = (): string => {
-		const keyPair = EC.genKeyPair();
-		const privateKey = keyPair.getPrivate().toString(16);
-		return privateKey;
 	};
 
 	static generatePrivatePublicKeys = () => {

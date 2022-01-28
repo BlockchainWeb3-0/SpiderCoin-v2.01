@@ -1,8 +1,6 @@
 import Wallet from "../../wallet/wallet";
 import { Transaction, TxIn, TxOut } from "../transaction"
 import UnspentTxOutput from "../unspentTxOutput";
-// const receiverPrivateKey = Wallet.generatePrivatekey();
-// const receiverPublicKey = Wallet.getPublicKeyFromPrivateKey(receiverPrivateKey);
 
 describe("transaction test", () => {
   describe("createTransaction function test", () => {
