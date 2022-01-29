@@ -1,0 +1,164 @@
+@import "../../variables";
+
+/* ====   Sidebar ==== */
+.sidebar {
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 250px;
+  padding: 10px 14px;
+  background: $--sidebar-color;
+
+  /* ==== Reusable CSS ==== */
+  .text {
+    font-size: 16px;
+    font-weight: 500;
+    color: $--text-color;
+  }
+
+  .image {
+    min-width: 60px;
+    display: flex;
+    align-items: center;
+  }
+
+  header {
+    position: relative;
+
+    .image-text {
+      display: flex;
+      align-items: center;
+
+      .image {
+        img {
+          width: 40px;
+          border-radius: 6px;
+          background: $--logo-color;
+        }
+      }
+
+      .header-text {
+        display: flex;
+        flex-direction: column;
+        
+        .name {
+          font-weight: 600;
+        }
+        .profession {
+          margin-top: -2px;
+        }
+      }
+    }
+    
+    .toggle {
+      position: absolute;
+      top: 50%;
+      right: -25px;
+      transform: translateY(-50%);
+      height: 25px;
+      width: 25px;
+      background: $--primary-color;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      color: $--sidebar-color;
+      font-size: 22px;
+    }
+  }
+
+  li {
+    height: 50px;
+    margin-top: 10px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+
+    a {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: $--trans-04;
+
+      &:hover {
+        background: $--primary-color;
+        .icon, .text {
+          color: $--sidebar-color;
+        }
+      }
+
+    }
+
+    .icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 60px;
+      font-size: 20px;
+    }
+    .icon, .text {
+      color: $--text-color;
+      transition: $--trans-02
+    }
+  }
+  
+  .menu-bar {
+    height: calc(100% - 50px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .menu {
+      .search-box {
+        background: $--primary-color-light;
+        input {
+          height: 100%;
+          width: 100%;
+          background: $--primary-color-light;
+          outline: none;
+          border: none;
+          border-radius: 6px;
+        }
+      }
+    }
+
+    .mode {
+      background: $--primary-color-light;
+
+      .moon-sun {
+        height: 50px;
+        width: 50px;
+        display: flex;
+        align-items: center;
+
+        i {
+          position: absolute;
+        }
+
+        i.sun {
+          opacity: 0;
+        }
+      }
+
+      .toggle-switch {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        min-width: 60px;
+        cursor: pointer;
+
+        
+        
+      }
+    }
+  }
+
+
+}
+
