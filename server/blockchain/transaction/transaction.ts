@@ -412,6 +412,10 @@ class Transaction {
 		
 		return newSignedTx;
 	};
+
+	// TODO : 생성한 tx를 검증 후 txpool에 넣는 함수 만들기
+	
+	// TODO : 블록 생성 후 txpool 갱신하는 함수 만들기
 }
 
 export { Transaction, TxIn, TxOut };

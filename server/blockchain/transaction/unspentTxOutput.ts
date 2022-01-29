@@ -108,4 +108,9 @@ export default class UnspentTxOutput {
 		console.log(`Total amount in available UTxO list : ${utxoTotalAmount}`);	
 		return {utxoListToBeUsed : null, leftOverAmount: null}
 	}
+
+	// TODO : 블록 생성 시 utxo uptdate하는 함수 만들기 
+	// TODO : => 사용된 utxo들은 Consumed utxo list에 잠깐 담아두고 
+	// TODO : => 새로 생성된 utxo들은 new utxo list에 담아 뒀다가 
+	// TODO : => 블록 생성되면 GlobalVar.utxoList에서 consumed는 제거, new list는 추가하면 될듯?
 }
