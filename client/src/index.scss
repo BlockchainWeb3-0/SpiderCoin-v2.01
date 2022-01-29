@@ -17,33 +17,6 @@ body {
   //   sans-serif;
   // -webkit-font-smoothing: antialiased;
   // -moz-osx-font-smoothing: grayscale;
-  .switch {
-    position: relative;
-    height: 22px;
-    width: 44px;
-    border-radius: 25px;
-    background-color: $--toggle-color;
-
-    &::before {
-      content: "";
-      position: absolute;
-      height: 15px;
-      width: 15px;
-      border-radius: 50%;
-      top: 50%;
-      left: 5px;
-      transform: translateY(-50%);
-      background: $--sidebar-color;
-      transition: $--trans-03;
-    }
-  }
-  &.dark {
-    .switch {
-      &::before {
-        left: 25px;
-      }
-    }
-  }
 }
 
 code {

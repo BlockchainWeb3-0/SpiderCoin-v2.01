@@ -3,18 +3,19 @@ import "./sidebar.scss";
 
 const Sidebar = () => {
   const [darkMode, setDarkMode] = useState("Dark Mode");
-  const sidebar = document.querySelector(".sidebar");
   const toggle = document.querySelector(".toggle");
   const searchBtn = document.querySelector(".search-box");
-  const modeSwitch = document.querySelector(".toggle-switch");
   const modeText = document.querySelector(".mode-text")
   
   const clickModeSwitch = () => {
+    const modeSwitch = document.querySelector(".toggle-switch .switch");
+    const sidebar = document.querySelector(".sidebar");
     const body = document.querySelector("body");
-    if(body === null) {
+    if(body === null || modeSwitch === null) {
       throw Error("Cannot find body")
     }
     body.classList.toggle("dark")
+    modeSwitch.classList.toggle("dark")
   }
 
 	return (

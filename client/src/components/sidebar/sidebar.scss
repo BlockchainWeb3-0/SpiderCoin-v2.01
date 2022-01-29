@@ -153,8 +153,32 @@
         min-width: 60px;
         cursor: pointer;
 
-        
-        
+        .switch {
+          position: relative;
+          height: 22px;
+          width: 44px;
+          border-radius: 25px;
+          background-color: $--toggle-color;
+
+          &::before {
+            content: "";
+            position: absolute;
+            height: 15px;
+            width: 15px;
+            border-radius: 50%;
+            top: 50%;
+            left: 6px;
+            transform: translateY(-50%);
+            background: $--sidebar-color;
+            transition: $--trans-03;
+          }
+          &.dark {
+            &::before {
+              $--dark-theme: "true";
+              left: 24px;
+            }
+          }
+        }
       }
     }
   }
