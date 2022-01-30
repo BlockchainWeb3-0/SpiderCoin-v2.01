@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-@import "variables";
+@import "./styles/colors.scss";
+@import "./styles/transitions.scss";
 
 *{
   font-family: 'Poppins', sans-serif;
@@ -8,15 +9,10 @@
   box-sizing: border-box;
 }
 
-
 body {
   height: 100vh;
-  background: $--body-color;
-  // font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-  //   'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-  //   sans-serif;
-  // -webkit-font-smoothing: antialiased;
-  // -moz-osx-font-smoothing: grayscale;
+  background: var(--body-color);
+  transition: $--trans-04;
 }
 
 code {
