@@ -125,7 +125,7 @@ const Sidebar = () => {
 				</div>
 			</nav>
 
-			<section className="home">
+			<section className="main-contents">
 				<div className="text">Dashboard</div>
 			</section>
 		</>

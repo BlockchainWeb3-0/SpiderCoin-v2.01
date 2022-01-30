@@ -1,9 +1,7 @@
 @import "../../styles/colors.scss";
 @import "../../styles/transitions.scss";
 
-/* ====   Sidebar ==== */
-
-
+/* ==== Sidebar ==== */
 .sidebar {
   &.close {
     width: 88px;
@@ -17,9 +15,10 @@
       }
     }
 
-    ~ .home {
+    & ~ .main-contents {
       left: 88px;
       width: calc(100% - 88px);
+      transition: $--trans-04;
     }
   }
   
@@ -229,22 +228,22 @@
   }
 }
 
-.home {
+/* ==== Main Contents ==== */
+.main-contents {
   position: relative;
   left: 250px;
   height: 100vh;
   width: calc(100% - 250px);
   background: var(--body-color);
-  transition: var($--trans-05);
+  transition: $--trans-04;
 
-  .text {
-    font-size: 30px;
-    font-weight: 500;
-    padding: 8px 40px;
-    color: var(--text-color);
-  }
+  font-size: 30px;
+  font-weight: 500;
+  padding: 8px 40px;
+  color: var(--text-color);
 }
 
+/* ==== When DarkMode clicked ==== */
 body.dark {
   .sidebar {
     header {
