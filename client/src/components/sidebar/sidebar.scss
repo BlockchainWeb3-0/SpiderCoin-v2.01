@@ -161,65 +161,68 @@
       }
     }
 
-    .mode {
-      position: relative;
-      background: var(--primary-color-light);
-      border-radius: 6px;
+    .bottom-content {
 
-      .moon-sun {
-        height: 50px;
-        width: 60px;
-        display: flex;
-        align-items: center;
-        background-color: var(--primary-color-light);
+      .mode {
+        position: relative;
+        background: var(--primary-color-light);
         border-radius: 6px;
-
-        i {
-          position: absolute;
-          transition: var($--trans-04);
-        }
-
-        i.sun {
-          opacity: 0;
-        }
-        i.moon {
-          opacity: 1;
-        }
-      }
-
-      .toggle-switch {
-        position: absolute;
-        right: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        min-width: 60px;
-        cursor: pointer;
-        transition: var($--trans-05);
-
-        .switch {
-          position: relative;
-          height: 22px;
-          width: 44px;
-          border-radius: 25px;
-          background-color: var(--toggle-color);
-
-          &::before {
-            content: "";
+  
+        .moon-sun {
+          height: 50px;
+          width: 60px;
+          display: flex;
+          align-items: center;
+          background-color: var(--primary-color-light);
+          border-radius: 6px;
+  
+          i {
             position: absolute;
-            height: 15px;
-            width: 15px;
-            border-radius: 50%;
-            top: 50%;
-            left: 6px;
-            transform: translateY(-50%);
-            background: var(--sidebar-color);
-            transition: $--trans-03;
+            transition: var($--trans-04);
           }
-          &.dark {
+  
+          i.sun {
+            opacity: 0;
+          }
+          i.moon {
+            opacity: 1;
+          }
+        }
+  
+        .toggle-switch {
+          position: absolute;
+          right: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          min-width: 60px;
+          cursor: pointer;
+          transition: var($--trans-05);
+  
+          .switch {
+            position: relative;
+            height: 22px;
+            width: 44px;
+            border-radius: 25px;
+            background-color: var(--toggle-color);
+  
             &::before {
-              left: 24px;
+              content: "";
+              position: absolute;
+              height: 15px;
+              width: 15px;
+              border-radius: 50%;
+              top: 50%;
+              left: 6px;
+              transform: translateY(-50%);
+              background: var(--sidebar-color);
+              transition: $--trans-03;
+            }
+            &.dark {
+              &::before {
+                left: 24px;
+              }
             }
           }
         }

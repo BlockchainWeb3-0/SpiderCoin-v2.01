@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import "./sidebar.scss";
 
 const Sidebar = () => {
-	const [darkMode, setDarkMode] = useState("Dark Mode");
-	const toggle = document.querySelector(".toggle");
-	const searchBtn = document.querySelector(".search-box");
+	const [isLogined, setIsLogined] = useState(false);
 	
 	const clickModeSwitch = () => {
 		const modeText = document.querySelector(".mode-text");
@@ -38,6 +36,10 @@ const Sidebar = () => {
 		sidebar.classList.remove("close");
 	}
 
+	const clickLoginBtn = () => {
+		setIsLogined(!isLogined);
+	}
+
 	return (
 		<>
 			<nav className="sidebar close">
@@ -53,12 +55,12 @@ const Sidebar = () => {
 						</div>
 					</div>
 
-					<i onClick={clickNavToggleBtn} className="bx bx-chevron-right toggle"></i>
+					<i className="bx bx-chevron-right toggle" onClick={clickNavToggleBtn}></i>
 				</header>
 
 				<div className="menu-bar">
 					<div className="menu">
-						<li onClick={clickSearchBtn} className="search-box">
+						<li className="search-box" onClick={clickSearchBtn}>
 							<i className="bx bx-search icon"></i>
 							<input type="text" placeholder="Search..." />
 						</li>
@@ -103,10 +105,16 @@ const Sidebar = () => {
 					</div>
 
 					<div className="bottom-content">
-						<li className="nav-link">
+						<li className="nav-link log-in-out" onClick={clickLoginBtn}>
 							<a href="#">
-								<i className="bx bx-log-out icon"></i>
-								<span className="text nav-text">Logout</span>
+								{isLogined ? <>
+									<i className="bx bx-log-out icon log-out"></i>
+									<span className="text nav-text">Logout</span>
+								</> : <>
+									<i className="bx bx-log-in icon log-in"></i>
+									<span className="text nav-text">Login</span>
+								</>
+								}
 							</a>
 						</li>
 
@@ -117,7 +125,7 @@ const Sidebar = () => {
 							</div>
 							<span className="mode-text text">Dark Mode</span>
 
-							<div onClick={clickModeSwitch} className="toggle-switch">
+							<div className="toggle-switch" onClick={clickModeSwitch} >
 								<span className="switch"></span>
 							</div>
 						</li>
