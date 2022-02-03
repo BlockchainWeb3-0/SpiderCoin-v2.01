@@ -20,7 +20,14 @@ router.post("/create", (req, res) => {
   const { receiverAddress, sendingAmount, senderAddress, privateKey } =
 		req.body;
 
-  const newTx: Transaction | null = Transaction.createTransaction(receiverAddress, sendingAmount, senderAddress, privateKey, GlobalVar.utxoList, GlobalVar.txpool.txList)
+  const newTx: Transaction | null = Transaction.createTx(
+		receiverAddress,
+		sendingAmount,
+		senderAddress,
+		privateKey,
+		GlobalVar.utxoList,
+		GlobalVar.txpool.txList
+	);
 
   if(newTx === null) {
     res.send("Transaction wasn't created.")

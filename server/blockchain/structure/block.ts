@@ -2,8 +2,6 @@ import fs from "fs";
 import merkle from "merkle";
 import cryptojs from "crypto-js";
 import * as config from "../config";
-import { Hash } from "crypto";
-import { Transaction } from "../transaction/transaction";
 
 /**
  * @brief Block's header class
@@ -225,6 +223,12 @@ class Block {
 		const newBlock = new Block(blockHeader, hash, data);
 		return newBlock;
 	};
+
+
+
+	/********************************/
+	/***** Validation Functions *****/
+	/********************************/
 
 	/**
 	 * @brief Validates Block structure

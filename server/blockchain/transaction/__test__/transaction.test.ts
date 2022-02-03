@@ -3,7 +3,7 @@ import { Transaction, TxIn, TxOut } from "../transaction"
 import UnspentTxOutput from "../unspentTxOutput";
 
 describe("transaction test", () => {
-  describe("createTransaction function test", () => {
+  describe("createTx function test", () => {
     let receiverAddress: string;
     let sendingAmount: number;
     let sendingAddress: string;
@@ -35,7 +35,7 @@ describe("transaction test", () => {
       tx1.txIns = [txIn1]
       txpool.push(tx1);
 
-      newTx = Transaction.createTransaction(
+      newTx = Transaction.createTx(
 				receiverAddress,
 				sendingAmount,
         sendingAddress,
@@ -58,7 +58,7 @@ describe("transaction test", () => {
     })
     test("If sending amount is 35, newTx has four txIn", () => {
       sendingAmount = 35;
-      newTx = Transaction.createTransaction(
+      newTx = Transaction.createTx(
 				receiverAddress,
 				sendingAmount,
         sendingAddress,
@@ -73,7 +73,7 @@ describe("transaction test", () => {
     })
     test("If sending amount is 100, cannot create transaction and newTx should be null", () => {
       sendingAmount = 100;
-      newTx = Transaction.createTransaction(
+      newTx = Transaction.createTx(
 				receiverAddress,
 				sendingAmount,
         sendingAddress,

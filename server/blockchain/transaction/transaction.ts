@@ -3,7 +3,7 @@ import _ from "lodash";
 import UnspentTxOutput from "./unspentTxOutput";
 import Wallet from "../wallet/wallet";
 import * as config from "../config";
-import GlobalVar from "../globalVar";
+import TransactionPool from "./transactionPool";
 
 /**
  * @brief Transaction Input class
@@ -50,7 +50,7 @@ class TxIn {
 
 	static getSignedTxInList = (unsignedTxInList: TxIn[], utxoListToBeUsed: UnspentTxOutput[], privateKey: string, txId: string): TxIn[] => {
 		return unsignedTxInList.map((unsignedTxIn: TxIn) => {
-			const utxoMatchesTxIn = UnspentTxOutput.findUtxoMatchesTxIn(unsignedTxIn, utxoListToBeUsed);
+			const utxoMatchesTxIn = UnspentTxOutput.findUtxo(unsignedTxIn.txOutId, unsignedTxIn.txOutIndex, utxoListToBeUsed);
 			if(utxoMatchesTxIn === undefined) {
 				const errMsg = "Cannot find UTxO which matches TxIn"
 				console.log(errMsg);
@@ -65,6 +65,11 @@ class TxIn {
 			return signedTxIn;
 		}) 
 	}
+
+	
+	/********************************/
+	/***** Validation Functions *****/
+	/********************************/
 
 	static isValidTxInStructure = (txIn: TxIn): boolean => {
 		if (txIn === null || txIn === undefined) {
@@ -87,6 +92,26 @@ class TxIn {
 	};
 
 	/**
+	 * @brief txIn doen't have amount, so that get amount from UTxO
+	 * @param txIn transaction input
+	 * @param utxoList unspent tx output list where txIn came from
+	 * @returns amount of txIn
+	 */
+	static getTxInAmount = (txIn: TxIn, utxoList: UnspentTxOutput[]) => {
+		const utxoFound = UnspentTxOutput.findUtxo(txIn.txOutId, txIn.txOutIndex, utxoList);
+		if (utxoFound === undefined) {
+			return 0;
+		}
+		return utxoFound.amount;
+	};
+
+	static getTxInsTotalAmount = (txIns: TxIn[], utxo: UnspentTxOutput[]): number => {
+		return txIns
+			.map((txIn) => TxIn.getTxInAmount(txIn, utxo))
+			.reduce((a, b) => a + b, 0);
+	}
+
+	/**
 	 * @brief Validates txIn
 	 * @param tx transaction which contains txIn
 	 * @param txIn transaction input
@@ -106,7 +131,7 @@ class TxIn {
 
 		// 1. check if txIn is from UTxO list
 		const utxoFound: UnspentTxOutput | undefined =
-			UnspentTxOutput.findUtxoMatchesTxIn(txIn, utxoList);
+			UnspentTxOutput.findUtxo(txIn.txOutId, txIn.txOutIndex, utxoList);
 		if (utxoFound === undefined) {
 			console.log("Cannot find TxIn from UTxO");
 			return false;
@@ -125,26 +150,6 @@ class TxIn {
 
 		return true;
 	};
-
-	/**
-	 * @brief txIn doen't have amount, so that get amount from UTxO
-	 * @param txIn transaction input
-	 * @param utxoList unspent tx output list where txIn came from
-	 * @returns amount of txIn
-	 */
-	static getTxInAmount = (txIn: TxIn, utxoList: UnspentTxOutput[]) => {
-		const utxoFound = UnspentTxOutput.findUtxoMatchesTxIn(txIn, utxoList);
-		if (utxoFound === undefined) {
-			return 0;
-		}
-		return utxoFound.amount;
-	};
-
-	static getTxInsTotalAmount = (txIns: TxIn[], utxo: UnspentTxOutput[]): number => {
-		return txIns
-			.map((txIn) => TxIn.getTxInAmount(txIn, utxo))
-			.reduce((a, b) => a + b, 0);
-	}
 }
 
 /**
@@ -163,22 +168,6 @@ class TxOut {
 		this.address = address;
 		this.amount = amount;
 	}
-
-	static isValidTxOutStructure = (txOut: TxOut): boolean => {
-		if (txOut === null || txOut === undefined) {
-			console.log("The txOut is null or undefined");
-			return false;
-		}
-		if (typeof txOut.address !== "string") {
-			console.log("Wrong type of txOut address");
-			return false;
-		}
-		if (typeof txOut.amount !== "number") {
-			console.log("Wrong type of txOut amount");
-			return false;
-		}
-		return true;
-	};
 
 	/**
 	 * @brief Create txOutput list to put into new transaction.
@@ -207,6 +196,40 @@ class TxOut {
 
 		return [sendingTxOut, refundTxOut];
 	};
+
+
+
+	/********************************/
+	/***** Validation Functions *****/
+	/********************************/
+
+	static isValidTxOutStructure = (txOut: TxOut): boolean => {
+		if (txOut === null || txOut === undefined) {
+			console.log("The txOut is null or undefined");
+			return false;
+		}
+		if (typeof txOut.address !== "string") {
+			console.log("Wrong type of txOut address");
+			return false;
+		}
+		if (typeof txOut.amount !== "number") {
+			console.log("Wrong type of txOut amount");
+			return false;
+		}
+		return true;
+	};
+
+	static isValidTxOut = (txOut: TxOut): boolean => {
+		if (Wallet.isValidAddress(txOut.address)) {
+			console.log("Invalid txOut address");
+			return false;
+		}
+		if (txOut.amount === 0 || txOut.amount === NaN) {
+			console.log("Invalid txOut amount");
+			return false;
+		}
+		return true;
+	}
 }
 
 /**
@@ -246,6 +269,129 @@ class Transaction {
 		const txId = cryptojs.SHA256(txInContents + txOutContents).toString();
 		return txId;
 	}
+
+	/**
+	 * @brief Creates reward transaction for node who succeed mining
+	 * @param minerAddress
+	 * @param blockIndex
+	 * @returns reward transaction which does not have txInput
+	 */
+	static createRewardTx = (
+		minerAddress: string,
+		blockIndex: number
+	): Transaction => {
+		// * reward transaction does not have transaction input.
+
+		// create empty txIn to make Transation class
+		const rewardTxIn = new TxIn("", blockIndex, "");
+		const rewardTxOut = new TxOut(minerAddress, config.MINING_REWARD);
+
+		const rewardTx = new Transaction("", [rewardTxIn], [rewardTxOut]);
+		rewardTx.id = this.calTxId(rewardTx);
+
+		return rewardTx;
+	};
+
+	/**
+	 * @brief Find available UTxOs and create new transaction with signature
+	 * @param receiverAddress
+	 * @param sendingAmount
+	 * @param senderAddress
+	 * @param privateKey
+	 * @param utxoList
+	 * @param txpool
+	 * @returns
+	 */
+	static createTx = (
+		receiverAddress: string,
+		sendingAmount: number,
+		senderAddress: string,
+		privateKey: string,
+		utxoList: UnspentTxOutput[],
+		txpool: Transaction[]
+	): Transaction | null => {
+		// 1. Gets myUtxoList from utxoList
+		if (senderAddress !== Wallet.getPublicKeyFromPrivateKey(privateKey)) {
+			console.log("Sender's address and privateKey are not paired.");
+			return null;
+		}
+		
+		const myUtxoList: UnspentTxOutput[] = UnspentTxOutput.findMyUtxoList(
+			senderAddress,
+			utxoList
+		);
+
+		// 2. Checks if myUtxo is already used and filter it
+		const avaliableMyUtxoList: UnspentTxOutput[] =
+			UnspentTxOutput.filterConsumedMyUtxoList(myUtxoList, txpool);
+
+		// 3. Gets available UTxOs equal to or greater than sending amount
+		const { utxoListToBeUsed, leftOverAmount } =
+			UnspentTxOutput.getUtxosForSending(avaliableMyUtxoList, sendingAmount);
+
+		// ! Exceptio handling : cannot create transaction from the available UTxO list
+		if (utxoListToBeUsed === null || leftOverAmount === null) {
+			return null;
+		}
+
+		// 4. Creates Transaction without Id and signatures
+		const newUnsignedTxIns: TxIn[] = TxIn.getUnSginedTxInList(utxoListToBeUsed);
+		const newTxOuts: TxOut[] = TxOut.createTxOuts(
+			receiverAddress,
+			sendingAmount,
+			senderAddress,
+			leftOverAmount
+		);
+
+		// 5. Calculates Transaction Id
+		const newUnsignedTx: Transaction = new Transaction(
+			"",
+			newUnsignedTxIns,
+			newTxOuts
+		);
+		newUnsignedTx.id = Transaction.calTxId(newUnsignedTx);
+
+		// 6. Gets Transaction Inputs' signature
+		const newSignedTx: Transaction = { ...newUnsignedTx };
+		const newSignedTxIns = TxIn.getSignedTxInList(
+			newUnsignedTx.txIns,
+			utxoListToBeUsed,
+			privateKey,
+			newUnsignedTx.id
+		);
+		newSignedTx.txIns = newSignedTxIns;
+
+		return newSignedTx;
+	};
+
+	static sendTx = (
+		receiverAddress: string,
+		sendingAmount: number,
+		senderAddress: string,
+		privateKey: string,
+		utxoList: UnspentTxOutput[],
+		txpool: Transaction[]
+	) => {
+		const newTx: Transaction | null = Transaction.createTx(
+			receiverAddress,
+			sendingAmount,
+			senderAddress,
+			privateKey,
+			utxoList,
+			txpool
+		);
+		if (newTx === null) {
+			return false;
+		}
+		TransactionPool.addTxPool(newTx, utxoList, txpool);
+		return true;
+	};
+
+
+	
+	/********************************/
+	/***** Validation Functions *****/
+	/********************************/
 
 	static isValidTxStructure = (tx: Transaction): boolean => {
 		/**
@@ -292,6 +438,12 @@ class Transaction {
 		return true;
 	};
 
+	static isValidTxListStructure = (txList: Transaction[]): boolean => {
+		return txList
+			.map((tx) => this.isValidTxStructure(tx))
+			.reduce((a, b) => a && b, true);
+	};
+
 	/**
 	 * @brief Validates transaction
 	 * @param tx transaction to validate
@@ -309,9 +461,26 @@ class Transaction {
 		}
 
 		// validate txIns
-		tx.txIns
+		const isValidTxIns = tx.txIns
 			.map((txIn) => TxIn.isValidTxIn(tx.id, txIn, utxoList))
 			.reduce((a, b) => a && b, true);
+
+		if (!isValidTxIns) {
+			console.log("Invalid txIn found");
+			console.log(`Transcation id : ${tx.id}`);
+			return false;
+		}
+
+		// validate txOuts
+		const isValidTxOuts = tx.txOuts
+			.map((txOut) => TxOut.isValidTxOut(txOut))
+			.reduce((a, b) => a && b, true);
+
+		if (!isValidTxOuts) {
+			console.log("Invalid txOut found");
+			console.log(`Transcation id : ${tx.id}`);
+			return false;
+		}
 
 		// check if txIns total amount === txOuts total amount
 		const txInsTotalAmount = TxIn.getTxInsTotalAmount(tx.txIns, utxoList);
@@ -327,95 +496,60 @@ class Transaction {
 		return true;
 	};
 
-	/**
-	 * @brief Creates reward transaction for node who succeed mining
-	 * @param minerAddress
-	 * @param blockIndex
-	 * @returns reward transaction which does not have txInput
-	 */
-	static getRewardTransaction = (
-		minerAddress: string,
+	static isValidRewardTx = (
+		rewardTx: Transaction,
 		blockIndex: number
-	): Transaction => {
-		// * reward transaction does not have transaction input.
-
-		// create empty txIn to make Transation class
-		const rewardTxIn = new TxIn("", blockIndex, "");
-		const rewardTxOut = new TxOut(minerAddress, config.MINING_REWARD);
-
-		const rewardTx = new Transaction("", [rewardTxIn], [rewardTxOut]);
-		rewardTx.id = this.calTxId(rewardTx);
-
-		return rewardTx;
-	};
-
-
-	/**
-	 * @brief Find available UTxOs and create new transaction with signature
-	 * @param receiverAddress 
-	 * @param sendingAmount 
-	 * @param senderAddress 
-	 * @param privateKey 
-	 * @param utxoList 
-	 * @param txpool 
-	 * @returns 
-	 */
-	static createTransaction = (
-		receiverAddress: string,
-		sendingAmount: number,
-		senderAddress: string,
-		privateKey: string,
-		utxoList: UnspentTxOutput[],
-		txpool: Transaction[]
-	): Transaction | null => {
-		// 1. Gets myUtxoList from utxoList
-		if(senderAddress !== Wallet.getPublicKeyFromPrivateKey(privateKey)) {
-			console.log("Sender's address and privateKey are not paired.");
-			return null;
-		}
-		const myAddress: string = Wallet.getPublicKeyFromPrivateKey(privateKey);
-		const myUtxoList: UnspentTxOutput[] = UnspentTxOutput.findMyUtxoList(
-			myAddress,
-			utxoList
-		);
-
-		// 2. Checks if myUtxo is already used and filter it
-		const avaliableMyUtxoList: UnspentTxOutput[] =
-			UnspentTxOutput.filterConsumedMyUtxoList(myUtxoList, txpool);
-
-		// 3. Gets available UTxOs equal to or greater than sending amount
-		const { utxoListToBeUsed, leftOverAmount } =
-			UnspentTxOutput.getUtxosForSending(avaliableMyUtxoList, sendingAmount);
-
-		// ! Exceptio handling : cannot create transaction from the available UTxO list
-		if (utxoListToBeUsed === null || leftOverAmount === null) {
-			return null;
+	): boolean => {
+		if (rewardTx === null) {
+			console.log("Invalid reward transaction");
+			return false;
 		}
 
-		// 4. Creates Transaction without Id and signatures
-		const newUnsignedTxIns: TxIn[] = TxIn.getUnSginedTxInList(utxoListToBeUsed);
-		const newTxOuts: TxOut[] = TxOut.createTxOuts(
-			receiverAddress,
-			sendingAmount,
-			myAddress,
-			leftOverAmount
-		);
+		if (this.calTxId(rewardTx) !== rewardTx.id) {
+			console.log(`Invalid reward transaction id: ${rewardTx.id}`);
+			return false;
+		}
 
-		// 5. Calculates Transaction Id
-		const newUnsignedTx: Transaction = new Transaction("", newUnsignedTxIns, newTxOuts);
-		newUnsignedTx.id = Transaction.calTxId(newUnsignedTx);
-	
-		// 6. Gets Transaction Inputs' signature
-		const newSignedTx: Transaction = {...newUnsignedTx};
-		const newSignedTxIns = TxIn.getSignedTxInList(newUnsignedTx.txIns, utxoListToBeUsed, privateKey, newUnsignedTx.id) 
-		newSignedTx.txIns = newSignedTxIns
-		
-		return newSignedTx;
+		if (rewardTx.txIns.length !== 1) {
+			console.log("Must be only one txOut in reward transaction");
+			return false;
+		}
+
+		if (rewardTx.txIns[0].txOutIndex === blockIndex) {
+			console.log("Invalid block hegiht");
+			return false;
+		}
+
+		if (rewardTx.txOuts.length !== 1) {
+			console.log("Must be only one txOut in reward transaction");
+			return false;
+		}
+
+		if (rewardTx.txOuts[0].amount !== config.MINING_REWARD) {
+			console.log("Invalid reward amount");
+			return false;
+		}
+
+		return true;
 	};
 
-	// TODO : 생성한 tx를 검증 후 txpool에 넣는 함수 만들기
-	
-	// TODO : 블록 생성 후 txpool 갱신하는 함수 만들기
+	static hasDuplicateTx = (txList: Transaction[]): boolean => {
+		const txIns: TxIn[] = txList
+			.map((tx) => tx.txIns)
+			.reduce((a, b) => a.concat(b), []);
+		let countDuplicates: any = {};
+		txIns.forEach((txIn) => {
+			countDuplicates[txIn.txOutId + txIn.txOutIndex] =
+				(countDuplicates[txIn.txOutId + txIn.txOutIndex] || 0) + 1;
+		});
+		for (const key in countDuplicates) {
+			if (countDuplicates[key] > 1) {
+				return false;
+			}
+		}
+
+		return true;
+	};
 }
 
 export { Transaction, TxIn, TxOut };
