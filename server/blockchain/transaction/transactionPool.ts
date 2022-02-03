@@ -1,5 +1,6 @@
 import _ from "lodash";
-import { Transaction, TxIn } from "./transaction";
+import Transaction from "./transaction";
+import TxIn from "./transactionInput";
 import UnspentTxOutput from "./unspentTxOutput";
 
 export default class TransactionPool {
@@ -24,7 +25,7 @@ export default class TransactionPool {
 	 * @param txpool txpool containing transactions that will be added to new block
 	 * @returns true if adding tx into txpool has done successfully
 	 */
-	static addTxPool = (
+	static addTxToTxpool = (
 		newTx: Transaction,
 		utxoList: UnspentTxOutput[],
 		txpool: Transaction[]

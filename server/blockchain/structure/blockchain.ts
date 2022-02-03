@@ -2,7 +2,7 @@ import { Block } from "./block";
 
 import _ from "lodash";
 import UnspentTxOutput from "../transaction/unspentTxOutput";
-import { Transaction } from "../transaction/transaction";
+import Transaction from "../transaction/transaction";
 
 export class Blockchain {
 	blocks: Block[];
@@ -117,7 +117,7 @@ export class Blockchain {
 
 		return (
 			Transaction.isValidRewardTx(firstTx, blockIndex) &&
-			Transaction.hasDuplicateTx(txData) &&
+			!Transaction.hasDuplicateTx(txData) &&
 			isValidNormalTxList
 		);
 	};

@@ -1,5 +1,7 @@
 import Wallet from "../../wallet/wallet";
-import { Transaction, TxIn, TxOut } from "../transaction"
+import Transaction from "../transaction";
+import TxIn from "../transactionInput";
+import TxOut from "../transactionOutput";
 import TransactionPool from "../transactionPool";
 import UnspentTxOutput from "../unspentTxOutput";
 
@@ -49,7 +51,7 @@ describe("transactionPool test", () => {
       if (newTx === null) {
         result = false;
       } else {
-        result = TransactionPool.addTxPool(newTx, utxoListToBeUsed, txpool);
+        result = TransactionPool.addTxToTxpool(newTx, utxoListToBeUsed, txpool);
       }
     })
     test("Adding tx into txPool has done successfully?", () => {
@@ -62,10 +64,10 @@ describe("transactionPool test", () => {
       }
 
       const isNewTxInTxpool = TransactionPool.doesTxpoolContainTx(newTx, txpool);
-      expect(result).toBe(true);
+      expect(isNewTxInTxpool).toBe(true);
     })
     
-    test("The last transaction of txpool should be same with new transaction", () => {
+    test("The last transaction of txpool must be same with new transaction", () => {
       const lastTx = txpool[txpool.length-1];
       expect(lastTx.id).toBe(newTx?.id)
       expect(lastTx.txOuts[0].address).toBe(receiverAddress);

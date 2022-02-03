@@ -1,6 +1,7 @@
 import _ from "lodash";
 import { Blockchain } from "../structure/blockchain";
-import { Transaction, TxIn } from "./transaction";
+import Transaction from "./transaction";
+import TxIn from "./transactionInput";
 import TransactionPool from "./transactionPool";
 
 /**
@@ -135,6 +136,7 @@ export default class UnspentTxOutput {
 		newTxList: Transaction[],
 		oldUtxoList: UnspentTxOutput[]
 	): UnspentTxOutput[] => {
+		// Get new utxo list from new tx's txOuts
 		const newUtxoList: UnspentTxOutput[] = newTxList
 			.map((tx) =>
 				tx.txOuts.map(
@@ -144,11 +146,13 @@ export default class UnspentTxOutput {
 			)
 			.reduce((a, b) => a.concat(b), []);
 
+		// Get consumed utxo list from new tx's txIns
 		const consumedUtxoList: UnspentTxOutput[] = newTxList
 			.map((tx) => tx.txIns)
 			.reduce((a, b) => a.concat(b), [])
 			.map((txIn) => new UnspentTxOutput(txIn.txOutId, txIn.txOutIndex, "", 0));
 
+		// remove consumed one from new utxo list
 		const newUtxoListFiltered = oldUtxoList
 			.filter(
 				(utxo) =>
@@ -157,6 +161,7 @@ export default class UnspentTxOutput {
 			)
 			.concat(newUtxoList);
 
+		// return filtered new utxo list
 		return newUtxoListFiltered;
 	};
 

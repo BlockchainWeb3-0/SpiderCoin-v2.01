@@ -1,5 +1,7 @@
 import Wallet from "../../wallet/wallet";
-import { Transaction, TxIn, TxOut } from "../transaction"
+import Transaction from "../transaction";
+import TxIn from "../transactionInput";
+import TxOut from "../transactionOutput";
 import UnspentTxOutput from "../unspentTxOutput";
 
 describe("transaction test", () => {
@@ -71,7 +73,7 @@ describe("transaction test", () => {
         expect(TxIn.getTxInsTotalAmount(newTx.txIns, utxoListToBeUsed)).toBe(40);
       }
     })
-    test("If sending amount is 100, cannot create transaction and newTx should be null", () => {
+    test("If sending amount is 100, cannot create transaction and newTx has to be null", () => {
       sendingAmount = 100;
       newTx = Transaction.createTx(
 				receiverAddress,
@@ -85,4 +87,30 @@ describe("transaction test", () => {
     })
   })
 
+  describe("hasDuplicateTx function test", () => {
+    let txList: Transaction[] = [] 
+    beforeEach(() => {
+      for (let i = 0; i < 10; i++) {
+        const txIns: TxIn[] = [];
+        const txOuts: TxOut[] = [];
+        for (let j = 0; j < 5; j++) {
+          const txIn = new TxIn(`id${i+j}`, j, `sign${i+j}`)
+          const txOut = new TxOut(`addr${i+j}`, i*j);
+          txIns.push(txIn);
+          txOuts.push(txOut);
+        }
+        const newTx = new Transaction("", txIns, txOuts);
+        newTx.id = Transaction.calTxId(newTx);
+        txList.push(newTx);
+      }
+    })
+
+    test("If txList has all different transactions, it results false", () => {
+      expect(Transaction.hasDuplicateTx(txList)).toBe(false);
+    })
+    test("If txList has duplicates, it results true", () => {
+      txList.push(txList[0]);
+      expect(Transaction.hasDuplicateTx(txList)).toBe(true);
+    })
+  })
 })
