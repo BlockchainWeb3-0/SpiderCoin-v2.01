@@ -60,15 +60,6 @@ export default class Wallet {
 		return privateKey;
 	};
 
-	static isValidSignature = (
-		address: string,
-		txId: string,
-		txInSign: string
-	): boolean => {
-		const key = EC.keyFromPublic(address, "hex");
-		return key.verify(txId, txInSign);
-	};
-
 	static decimalArrayToHexString = (decimalArray: number[]): string => {
 		return Array.from(decimalArray, (decimal) =>
 			("0" + (decimal & 0xff).toString(16)).slice(-2)
@@ -82,5 +73,42 @@ export default class Wallet {
 		);
 		return signature;
 	};
+
+
+
+	/********************************/
+	/***** Validation Functions *****/
+	/********************************/
+
+	static isValidSignature = (
+		address: string,
+		txId: string,
+		txInSign: string
+	): boolean => {
+		const key = EC.keyFromPublic(address, "hex");
+		return key.verify(txId, txInSign);
+	};
+
+	/**
+	 * @brief Address must be 130 length, contain only hex, and start with "04"  
+	 * @param address public key
+	 * @returns true if address is valid
+	 */
+	static isValidAddress = (address: string): boolean => {
+		if (address.length !== 130) {
+			console.log("Invalid address length");
+			return false;
+		}
+		else if (!address.startsWith("04")) {
+			console.log("Address must start with 04");
+			return false;
+		}
+		else if (address.match("^[a-fA-F0-9]+$") === null) {
+			console.log("Only hex characters are allowed for address");
+			return false;
+		}
+		
+		return true;
+	}
 }
 

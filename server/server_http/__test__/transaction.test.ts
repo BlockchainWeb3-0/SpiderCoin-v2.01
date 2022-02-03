@@ -1,6 +1,5 @@
 import axios from "axios";
-import { Transaction } from "../../blockchain/transaction/transaction";
-import UnspentTxOutput from "../../blockchain/transaction/unspentTxOutput";
+import Transaction from "../../blockchain/transaction/transaction";
 import Wallet from "../../blockchain/wallet/wallet";
 
 describe("Rotuers test", () => {

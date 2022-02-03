@@ -28,6 +28,7 @@ describe("Blockchain validation", () => {
 		if (newBlock !== null) {
 			blockchain.addBlock(newBlock);
 		}
+		lastBlock = blockchain.getLastBlock();
 	});
 
 	test("First block is genesis block", () => {
@@ -40,6 +41,7 @@ describe("Blockchain validation", () => {
 
 	test("corrupted block data => false", () => {
 		lastBlock.data = dataCorrupted;
+		
 		expect(Blockchain.isValidBlocks(blockchain.blocks)).toBeFalsy();
 	});
 });

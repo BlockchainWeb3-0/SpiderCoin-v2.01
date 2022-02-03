@@ -1,6 +1,8 @@
 import { Block } from "./block";
 
 import _ from "lodash";
+import UnspentTxOutput from "../transaction/unspentTxOutput";
+import Transaction from "../transaction/transaction";
 
 export class Blockchain {
 	blocks: Block[];
@@ -41,7 +43,7 @@ export class Blockchain {
 
 	/**
 	 * @brief Replace blockchain with new blockchain from other node
-	 * @param newBlocks 
+	 * @param newBlocks
 	 * @returns true when replaced successfully
 	 */
 	replaceBlocks = (newBlocks: Block[]): boolean => {
@@ -54,6 +56,11 @@ export class Blockchain {
 		return true;
 	};
 
+
+	/********************************/
+	/***** Validation Functions *****/
+	/********************************/
+
 	/**
 	 * @brief Validates blockchain
 	 * @param blocks
@@ -63,21 +70,55 @@ export class Blockchain {
 		/**	check list
 		 * 1. genesis block === first block
 		 * 2. validates each block
-		 * TODO
 		 * 3. Validate and update UTXOs (Unspent Transaction Outputs)
 		 */
-		if (blocks[0] !== Block.getGenesisBlock()) {
+		if (JSON.stringify(blocks[0]) !== JSON.stringify(Block.getGenesisBlock())) {
 			console.log("Invalid genesis block");
 			return false;
 		}
 
+		let utxoList: UnspentTxOutput[] | null = [];
 		for (let i = 1; i < blocks.length; i++) {
 			const currentBlock: Block = blocks[i];
 			const prevBlock: Block = blocks[i - 1];
 			if (!Block.isValidNewBlock(currentBlock, prevBlock)) {
 				return false;
 			}
+			utxoList = UnspentTxOutput.validateAndUpdateUtxoList(
+				currentBlock.data,
+				utxoList,
+				currentBlock.header.index
+			);
+			
+			if (utxoList === null) {
+				console.log("Invalid transaction in blockchain");
+				return false;
+			}
 		}
 		return true;
+	};
+
+	static isValidBlockTxData = (
+		txData: Transaction[],
+		utxoList: UnspentTxOutput[],
+		blockIndex: number
+	): boolean => {
+		/**
+		 * 1. first Tx must be reward tranasction
+		 * 2. check if there are duplicate transactions
+		 * 3. validates normal transactions 
+		 */
+		const firstTx = txData[0];
+
+		const normalTxList: Transaction[] = txData.slice(1);
+		const isValidNormalTxList = normalTxList
+			.map((tx) => Transaction.isValidTx(tx, utxoList))
+			.reduce((a, b) => a && b, true);
+
+		return (
+			Transaction.isValidRewardTx(firstTx, blockIndex) &&
+			!Transaction.hasDuplicateTx(txData) &&
+			isValidNormalTxList
+		);
 	};
 }

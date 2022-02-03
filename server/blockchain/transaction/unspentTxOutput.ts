@@ -1,5 +1,7 @@
 import _ from "lodash";
-import { Transaction, TxIn } from "./transaction";
+import { Blockchain } from "../structure/blockchain";
+import Transaction from "./transaction";
+import TxIn from "./transactionInput";
 import TransactionPool from "./transactionPool";
 
 /**
@@ -41,61 +43,76 @@ export default class UnspentTxOutput {
 	 * @param utxoList list of all utxo
 	 * @returns Found UTxO list or empty list if nothing found
 	 */
-	static findMyUtxoList = (myAddress: string, utxoList: UnspentTxOutput[]): UnspentTxOutput[] => {
+	static findMyUtxoList = (
+		myAddress: string,
+		utxoList: UnspentTxOutput[]
+	): UnspentTxOutput[] => {
 		const myUtxoList = utxoList.filter((utxo) => utxo.address === myAddress);
 		if (myUtxoList === undefined) {
-			return []
+			return [];
 		}
 		return myUtxoList;
-	}
+	};
 
-  /**
-   * @brief Find UTxO that matches txIn from utxoList
-   * @param txIn Transaction input
-   * @param utxoList Unspent Tx output list
-   * @returns UTxO same with txIn
-   */
-	static findUtxoMatchesTxIn = (
-		txIn: TxIn,
+	/**
+	 * @brief Find UTxO that matches txOutId and txOutIndex from utxoList
+	 * @param txOutId txIn's txOutId
+	 * @param txOutIndex txIn's txOutIndex
+	 * @param utxoList
+	 * @returns UTxO
+	 */
+	static findUtxo = (
+		txOutId: string,
+		txOutIndex: number,
 		utxoList: UnspentTxOutput[]
 	): UnspentTxOutput | undefined => {
 		return utxoList.find(
-			(utxo) =>
-				utxo.txOutId === txIn.txOutId && utxo.txOutIndex === txIn.txOutIndex
+			(utxo) => utxo.txOutId === txOutId && utxo.txOutIndex === txOutIndex
 		);
 	};
 
-	
 	static filterConsumedMyUtxoList = (
 		myUtxoList: UnspentTxOutput[],
 		txpool: Transaction[]
 	) => {
 		// Get all txIn list from transaction list
-    const everyTxIns: TxIn[] = TransactionPool.getEveryTxInsFromTxpool(txpool);
-    const consumedUtxoList: UnspentTxOutput[] = [];
+		const everyTxIns: TxIn[] = TransactionPool.getEveryTxInsFromTxpool(txpool);
+		const consumedUtxoList: UnspentTxOutput[] = [];
 
 		// find consumed myUtxo and push it into consumedUtxoList
 		everyTxIns.forEach((txIn) => {
 			myUtxoList.forEach((myUtxo) => {
-				if(myUtxo.txOutId == txIn.txOutId && myUtxo.txOutIndex === txIn.txOutIndex){
+				if (
+					myUtxo.txOutId == txIn.txOutId &&
+					myUtxo.txOutIndex === txIn.txOutIndex
+				) {
 					consumedUtxoList.push(myUtxo);
-				} 
-			})
-		})
+				}
+			});
+		});
 
 		return _.without(myUtxoList, ...consumedUtxoList);
-  };
+	};
 
-	static getUtxosForSending = (availableMyUtxoList: UnspentTxOutput[], sendingAmount: number) => {
+	/**
+	 * @brief Get utxo list to be used from availableMyUtxoList
+	 * @param availableMyUtxoList
+	 * @param sendingAmount
+	 * @returns object {utxo list to be used, leftOver amount}
+	 */
+	static getUtxosForSending = (
+		availableMyUtxoList: UnspentTxOutput[],
+		sendingAmount: number
+	) => {
 		const utxoListToBeUsed: UnspentTxOutput[] = [];
 		let utxoTotalAmount = 0;
 		for (const myUtxo of availableMyUtxoList) {
 			utxoTotalAmount += myUtxo.amount;
-			
+
 			utxoListToBeUsed.push(myUtxo);
 			if (utxoTotalAmount >= sendingAmount) {
-				const leftOverAmount = utxoTotalAmount - sendingAmount; 
-				return {utxoListToBeUsed, leftOverAmount};
+				const leftOverAmount = utxoTotalAmount - sendingAmount;
+				return { utxoListToBeUsed, leftOverAmount };
 			}
 		}
 		// 여기서 forEach를 사용해서 return을 하려고 했는데,
@@ -105,12 +122,66 @@ export default class UnspentTxOutput {
 
 		console.log("Cannot create transaction from the available UTxO list");
 		console.log(`Require amount : ${sendingAmount}`);
-		console.log(`Total amount in available UTxO list : ${utxoTotalAmount}`);	
-		return {utxoListToBeUsed : null, leftOverAmount: null}
-	}
+		console.log(`Total amount in available UTxO list : ${utxoTotalAmount}`);
+		return { utxoListToBeUsed: null, leftOverAmount: null };
+	};
 
-	// TODO : 블록 생성 시 utxo uptdate하는 함수 만들기 
-	// TODO : => 사용된 utxo들은 Consumed utxo list에 잠깐 담아두고 
-	// TODO : => 새로 생성된 utxo들은 new utxo list에 담아 뒀다가 
-	// TODO : => 블록 생성되면 GlobalVar.utxoList에서 consumed는 제거, new list는 추가하면 될듯?
+	/**
+	 * @brief Add new utxoList and remove consumed list to update
+	 * @param newTxList New block's transaction data
+	 * @param oldUtxoList utxo list before updates
+	 * @returns new utxoList after update
+	 */
+	static updateUtxoList = (
+		newTxList: Transaction[],
+		oldUtxoList: UnspentTxOutput[]
+	): UnspentTxOutput[] => {
+		// Get new utxo list from new tx's txOuts
+		const newUtxoList: UnspentTxOutput[] = newTxList
+			.map((tx) =>
+				tx.txOuts.map(
+					(txOut, index) =>
+						new UnspentTxOutput(tx.id, index, txOut.address, txOut.amount)
+				)
+			)
+			.reduce((a, b) => a.concat(b), []);
+
+		// Get consumed utxo list from new tx's txIns
+		const consumedUtxoList: UnspentTxOutput[] = newTxList
+			.map((tx) => tx.txIns)
+			.reduce((a, b) => a.concat(b), [])
+			.map((txIn) => new UnspentTxOutput(txIn.txOutId, txIn.txOutIndex, "", 0));
+
+		// remove consumed one from new utxo list
+		const newUtxoListFiltered = oldUtxoList
+			.filter(
+				(utxo) =>
+					this.findUtxo(utxo.txOutId, utxo.txOutIndex, consumedUtxoList) ===
+					undefined
+			)
+			.concat(newUtxoList);
+
+		// return filtered new utxo list
+		return newUtxoListFiltered;
+	};
+
+	/********************************/
+	/***** Validation Functions *****/
+	/********************************/
+
+	static validateAndUpdateUtxoList = (
+		newTxList: Transaction[],
+		oldUtxoList: UnspentTxOutput[],
+		blockIndex: number
+	): UnspentTxOutput[] | null => {
+		if (!Transaction.isValidTxListStructure(newTxList)) {
+			console.log("Invalid Transaction structure in the list");
+			return null;
+		}
+		if (!Blockchain.isValidBlockTxData(newTxList, oldUtxoList, blockIndex)) {
+			console.log("Invalid Block's Transaction data.");
+			return null;
+		}
+		return this.updateUtxoList(newTxList, oldUtxoList);
+	};
 }
