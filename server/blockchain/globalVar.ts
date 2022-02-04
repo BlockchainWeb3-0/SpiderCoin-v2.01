@@ -1,5 +1,5 @@
 import { Blockchain } from "./structure/blockchain";
-import { Transaction } from "./transaction/transaction";
+import Transaction from "./transaction/transaction";
 import TransactionPool from "./transaction/transactionPool";
 import UnspentTxOutput from "./transaction/unspentTxOutput";
 
