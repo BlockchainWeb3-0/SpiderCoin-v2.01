@@ -1,5 +1,5 @@
 import express from "express";
-import { Transaction } from "../../blockchain/transaction/transaction";
+import Transaction from "../../blockchain/transaction/transaction";
 import GlobalVar from "../../blockchain/globalVar";
 
 export const router = express.Router();
