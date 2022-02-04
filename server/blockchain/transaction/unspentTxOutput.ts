@@ -152,8 +152,9 @@ export default class UnspentTxOutput {
 			.reduce((a, b) => a.concat(b), [])
 			.map((txIn) => new UnspentTxOutput(txIn.txOutId, txIn.txOutIndex, "", 0));
 
-		// remove consumed one from new utxo list
-		const newUtxoListFiltered = oldUtxoList
+		// remove consumed one from old utxo list
+		// and then add new utxo list
+		const updatedUtxoList = oldUtxoList
 			.filter(
 				(utxo) =>
 					this.findUtxo(utxo.txOutId, utxo.txOutIndex, consumedUtxoList) ===
@@ -162,7 +163,7 @@ export default class UnspentTxOutput {
 			.concat(newUtxoList);
 
 		// return filtered new utxo list
-		return newUtxoListFiltered;
+		return updatedUtxoList;
 	};
 
 	/********************************/
