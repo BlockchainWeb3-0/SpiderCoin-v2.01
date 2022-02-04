@@ -126,6 +126,14 @@ export default class UnspentTxOutput {
 		return { utxoListToBeUsed: null, leftOverAmount: null };
 	};
 
+	static doesUxtoHasTxIn = (txIn: TxIn, utxoList: UnspentTxOutput[]): boolean => {
+		return utxoList.find(
+			(utxo) =>
+				utxo.txOutId === txIn.txOutId &&
+				utxo.txOutIndex === txIn.txOutIndex
+		) !== undefined;
+	}
+
 	/**
 	 * @brief Add new utxoList and remove consumed list to update
 	 * @param newTxList New block's transaction data

@@ -51,7 +51,35 @@ export default class TransactionPool {
 		txpool.push(newTx);
 		return true;
 	};
+	
+	/**
+	 * @brief Remove invalid transactions from txpool
+	 * @param utxoList
+	 * @param txpool 
+	 */
+	static updateTxpool = (utxoList: UnspentTxOutput[], txpool: Transaction[]) => {
+		const invalidTxList: Transaction[] = [];
 
+		// Every transaction's inputs must be from utxoList
+		// If not, they are invalid transactions
+		for (const tx of txpool) {
+			for (const txIn of tx.txIns) {
+				if (!UnspentTxOutput.doesUxtoHasTxIn(txIn, utxoList)) {
+					invalidTxList.push(tx);
+					break;
+				}
+			}
+		}
+
+		if (invalidTxList.length > 0) {
+			console.log("Found invalid transactions from txpool");
+			txpool = _.without(txpool, ...invalidTxList);
+			console.log("Removed invalid transactions successfully");
+		}
+		console.log("Fount nothing invalid, all transactions from txpool are valid");
+	}
+
+	
 
 	/********************************/
 	/***** Validation Functions *****/
@@ -69,12 +97,12 @@ export default class TransactionPool {
 	): boolean => {
 		const txInListFromTxpool: TxIn[] = this.getEveryTxInsFromTxpool(txpool);
 
-		const containsTxIn = (txInList: TxIn[], txIn: TxIn): TxIn | undefined => {
+		const containsTxIn = (txInList: TxIn[], txIn: TxIn): boolean => {
 			return txInList.find(
 				(txInFromList) =>
 					txInFromList.txOutId === txIn.txOutId &&
 					txInFromList.txOutIndex === txIn.txOutIndex
-			);
+			) !== undefined;
 		};
 
 		for (const txIn of tx.txIns) {
