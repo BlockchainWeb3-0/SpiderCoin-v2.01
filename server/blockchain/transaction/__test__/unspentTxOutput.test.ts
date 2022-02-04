@@ -1,5 +1,6 @@
-import { forEach } from "lodash";
-import { Transaction, TxIn, TxOut } from "../transaction";
+import Transaction from "../transaction";
+import TxIn from "../transactionInput";
+import TxOut from "../transactionOutput";
 import TransactionPool from "../transactionPool";
 import UnspentTxOutput from "../unspentTxOutput";
 
