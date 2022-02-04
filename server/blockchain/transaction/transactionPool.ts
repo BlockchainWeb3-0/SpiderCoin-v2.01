@@ -31,10 +31,9 @@ export default class TransactionPool {
 		txpool: Transaction[]
 	): boolean => {
 		/**
-		 * validates
-		 * 1. transaction
-		 * 2. transaction structure
-		 * 3. transaction pool
+		 * 1. Is valid transaction?
+		 * 2. Is Valid transaction structure?
+		 * 3. Is there duplicates in transaction pool?
 		 */
 		if (!Transaction.isValidTx(newTx, utxoList)) {
 			console.log("Invalid transaction");
@@ -51,23 +50,22 @@ export default class TransactionPool {
 		txpool.push(newTx);
 		return true;
 	};
-	
+
 	/**
 	 * @brief Remove invalid transactions from txpool
 	 * @param utxoList
-	 * @param txpool 
+	 * @param txpool
+	 * @return txpool that was removed invalid transcations
 	 */
-	static updateTxpool = (utxoList: UnspentTxOutput[], txpool: Transaction[]) => {
+	static removeInvalidTxsFromTxpool = (
+		utxoList: UnspentTxOutput[],
+		txpool: Transaction[]
+	): Transaction[] => {
 		const invalidTxList: Transaction[] = [];
 
-		// Every transaction's inputs must be from utxoList
-		// If not, they are invalid transactions
 		for (const tx of txpool) {
-			for (const txIn of tx.txIns) {
-				if (!UnspentTxOutput.doesUxtoHasTxIn(txIn, utxoList)) {
-					invalidTxList.push(tx);
-					break;
-				}
+			if (!Transaction.isValidTx(tx, utxoList)) {
+				invalidTxList.push(tx);
 			}
 		}
 
@@ -75,11 +73,14 @@ export default class TransactionPool {
 			console.log("Found invalid transactions from txpool");
 			txpool = _.without(txpool, ...invalidTxList);
 			console.log("Removed invalid transactions successfully");
+		} else {
+			console.log(
+				"Fount nothing invalid, all transactions from txpool are valid"
+			);
 		}
-		console.log("Fount nothing invalid, all transactions from txpool are valid");
-	}
-
-	
+		
+		return txpool
+	};
 
 	/********************************/
 	/***** Validation Functions *****/
@@ -98,11 +99,13 @@ export default class TransactionPool {
 		const txInListFromTxpool: TxIn[] = this.getEveryTxInsFromTxpool(txpool);
 
 		const containsTxIn = (txInList: TxIn[], txIn: TxIn): boolean => {
-			return txInList.find(
-				(txInFromList) =>
-					txInFromList.txOutId === txIn.txOutId &&
-					txInFromList.txOutIndex === txIn.txOutIndex
-			) !== undefined;
+			return (
+				txInList.find(
+					(txInFromList) =>
+						txInFromList.txOutId === txIn.txOutId &&
+						txInFromList.txOutIndex === txIn.txOutIndex
+				) !== undefined
+			);
 		};
 
 		for (const txIn of tx.txIns) {

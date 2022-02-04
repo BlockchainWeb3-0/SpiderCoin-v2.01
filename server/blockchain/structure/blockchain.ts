@@ -4,7 +4,7 @@ import _ from "lodash";
 import UnspentTxOutput from "../transaction/unspentTxOutput";
 import Transaction from "../transaction/transaction";
 
-export class Blockchain {
+export default class Blockchain {
 	blocks: Block[];
 
 	constructor() {
