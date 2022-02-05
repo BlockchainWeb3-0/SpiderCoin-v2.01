@@ -236,17 +236,44 @@ class Block {
 	 * @returns true for valid / false for invalid
 	 */
 	static isValidBlockStructure(block: Block): boolean {
-		return (
-			typeof block.header.version === "string" &&
-			typeof block.header.index === "number" &&
-			typeof block.header.prevHash === "string" &&
-			typeof block.header.merkleRoot === "string" &&
-			typeof block.header.timestamp === "number" &&
-			typeof block.header.difficulty === "number" &&
-			typeof block.header.nonce === "number" &&
-			typeof block.data === "object" &&
-			typeof block.hash === "string"
-		);
+		if (typeof block.header.version !== "string") {
+			console.log("Invalid type of block header version");
+			return false;
+		}
+		if (typeof block.header.index !== "number") {
+			console.log("Invalid type of block header index");
+			return false;
+		}
+		if (typeof block.header.prevHash !== "string") {
+			console.log("Invalid type of block header prevHash");
+			return false;
+		}
+		if (typeof block.header.merkleRoot !== "string") {
+			console.log("Invalid type of block header merkleRoot");
+			return false;
+		}
+		if (typeof block.header.timestamp !== "number") {
+			console.log("Invalid type of block header timestamp");
+			return false;
+		}
+		if (typeof block.header.difficulty !== "number") {
+			console.log("Invalid type of block header difficulty");
+			return false;
+		}
+		if (typeof block.header.nonce !== "number") {
+			console.log("Invalid type of block header nonce");
+			return false;
+		}
+		if (typeof block.data !== "object") {
+			console.log("Invalid type of block data");
+			return false;
+		}
+		if (typeof block.hash !== "string") {
+			console.log("Invalid type of block hash");
+			return false;
+		}
+		
+		return true;
 	}
 
 	/**
