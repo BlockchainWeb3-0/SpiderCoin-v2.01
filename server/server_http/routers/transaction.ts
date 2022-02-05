@@ -12,11 +12,6 @@ router.get("/", (req, res) => {
 
 
 router.post("/create", (req, res) => {
-  console.log(GlobalVar);
-  // const myPublicKey = Wallet.getPulicKeyFromWallet();
-  // const myPrivateKey = Wallet.getPrivateKeyFromWallet();
-  // const receiverAddress = Wallet.generatePrivatePublicKeys()[1];
-  
   const { receiverAddress, sendingAmount, senderAddress, privateKey } =
 		req.body;
 
