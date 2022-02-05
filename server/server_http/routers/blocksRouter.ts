@@ -9,7 +9,7 @@ router.get("/", (req, res) => {
 });
 
 router.get("/findBlock/:hash", (req, res) => {
-	const foundBlock = GlobalVar.blockchain.getBlock(req.params.hash); 
+	const foundBlock = GlobalVar.blockchain.findBlock(req.params.hash); 
 	res.send(foundBlock);
 })
 
@@ -26,4 +26,4 @@ router.post("/mineBlock", (req, res) => {
 		GlobalVar.blockchain.addBlock(newBlock);
 		res.send(GlobalVar.blockchain.getLastBlock());
 	}
-})
+});
