@@ -19,7 +19,7 @@ export default class Blockchain {
 		return this.blocks[0];
 	};
 
-	getBlock = (hash: string): Block | undefined => {
+	findBlock = (hash: string): Block | undefined => {
 		return this.blocks.find((block) => block.hash === hash);
 	}
 
