@@ -8,8 +8,9 @@ router.get("/", (req, res) => {
 	res.send(GlobalVar.blockchain);
 });
 
-router.get("/getBlock/:hash", (req, res) => {
-	res.send(GlobalVar.blockchain.blocks.find((block) => block.hash === req.params.hash));
+router.get("/findBlock/:hash", (req, res) => {
+	const foundBlock = GlobalVar.blockchain.getBlock(req.params.hash); 
+	res.send(foundBlock);
 })
 
 router.get("/lastBlock", (req, res) => {

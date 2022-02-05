@@ -94,10 +94,12 @@ describe("Blocks Router test", () => {
 		expect(minedBlock).toEqual(lastBlock);
 	});
 
-	test("Get a block using block's hash", async () => {
-    const getBlockParams = {...getParams, url: `/blocks/getBlock/${lastBlockHash}`}
-    const getBlockResult = await axios.request(getParams)
-    expect(getBlockResult.data).toBe(lastBlock);
+	test("Find a block using block's hash", async () => {
+    const getBlockParams = {...getParams, url: `/blocks/findBlock/${lastBlockHash}`}
+    const getBlockResult = await axios.request(getBlockParams)
+    console.log(getBlockResult.data);
+    
+    expect(getBlockResult.data).toEqual(lastBlock);
   });
 
 	afterAll(async () => {
