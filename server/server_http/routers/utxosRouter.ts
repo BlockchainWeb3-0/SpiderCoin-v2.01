@@ -7,8 +7,6 @@ export const router = express.Router();
 
 router.get('/', (req, res) => {
   console.log("UTxO Router");
-  console.log(GlobalVar.utxoList);
-  
   res.send(GlobalVar.utxoList)
 })
 
@@ -40,14 +38,13 @@ router.get("/create/test", (req, res) => {
     );
     GlobalVar.utxoList.push(utxo);
   }
-  console.log(GlobalVar.utxoList);
-  
+  console.log("Created test utxoList");
   res.send("Created test utxoList")
 })
 
 router.get("/clear/test", (req, res) => {
   GlobalVar.utxoList = [];
-  console.log(GlobalVar.utxoList);
+  console.log("Cleared test utxoList");
   
-  res.send("Created test utxoList")
+  res.send("Creared test utxoList")
 })

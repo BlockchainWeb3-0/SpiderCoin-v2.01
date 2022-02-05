@@ -12,10 +12,10 @@ router.get("/", (req, res) => {
 
 
 router.post("/create", (req, res) => {
-  const { receiverAddress, sendingAmount, senderAddress, privateKey } =
+	const { receiverAddress, sendingAmount, senderAddress, privateKey } =
 		req.body;
 
-  const newTx: Transaction | null = Transaction.createTx(
+	const newTx: Transaction | null = Transaction.createTx(
 		receiverAddress,
 		sendingAmount,
 		senderAddress,

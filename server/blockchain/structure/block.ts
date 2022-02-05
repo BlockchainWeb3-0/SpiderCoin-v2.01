@@ -69,7 +69,7 @@ class BlockHeader {
  */
 class Block {
 	public header: BlockHeader;
-	public hash: string | null;
+	public hash: string;
 	public data: any[];
 
 	constructor(header: BlockHeader, hash: string | null, data: any[]) {
@@ -77,9 +77,9 @@ class Block {
 		if (hash === null) {
 			this.hash = "0".repeat(64);
 		} else {
+			this.hash = hash;
+			this.data = data;
 		}
-		this.hash = hash;
-		this.data = data;
 	}
 
 	/**
