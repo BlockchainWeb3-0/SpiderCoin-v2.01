@@ -8,5 +8,4 @@ export default class GlobalVar {
   static txpool = new TransactionPool();
   static utxoList: UnspentTxOutput[] = [];
   static blockchain: Blockchain = new Blockchain();
-  static array1: any[] = ["test"]
 }

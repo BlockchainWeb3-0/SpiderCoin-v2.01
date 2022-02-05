@@ -1,31 +1,40 @@
 import axios from "axios";
 import Transaction from "../../blockchain/transaction/transaction";
+import UnspentTxOutput from "../../blockchain/transaction/unspentTxOutput";
 import Wallet from "../../blockchain/wallet/wallet";
 
-describe("Rotuers test", () => {
+describe("Transaction Router test", () => {
 	let receiverAddress: string;
 	let sendingAmount: number;
 	let senderAddress: string;
 	let privateKey: string;
 
+	let allUtxoList: UnspentTxOutput[];
 	beforeAll(async () => {
 		// create test utxo list
-		const params: object = {
+		const createUtxoParams: object = {
 			method: "get",
 			baseURL: "http://localhost:3001",
 			url: "/utxos/create/test",
 		};
-		await axios.request(params);
+		await axios.request(createUtxoParams);
+
+		const getUtxoParams: object = {
+			method: "get",
+			baseURL: "http://localhost:3001",
+			url: "/utxos",
+		};
+		const getUtxoResult = await axios.request(getUtxoParams);
+		allUtxoList = getUtxoResult.data;
 	});
 	beforeEach(() => {
-		receiverAddress =
-			"04d2d156b54c47d0ad7acca55ad5e484eb0191a6d783e7473037d4d9f4af66455ee937826090e71dbbacc0a7e7540d2850f92812bce1f87180cac3900541794274";
+		receiverAddress = Wallet.generatePrivatePublicKeys().publicKey;
 		senderAddress = Wallet.getPulicKeyFromWallet();
 		privateKey = Wallet.getPrivateKeyFromWallet();
 		sendingAmount = 10;
 	});
 
-	// * create new transaction 
+	// * create new transaction
 	describe("transaction router test", () => {
 		test("Post: /transaction/create", async () => {
 			const params: object = {
@@ -41,12 +50,11 @@ describe("Rotuers test", () => {
 			};
 			const result = await axios.request(params);
 			const tx: Transaction = result.data;
-			if (tx === null) {
-				expect(tx).toBe(null);
-			} else {
-				expect(tx.txOuts[0].address).toBe(receiverAddress);
-				expect(tx.txOuts[0].amount).toBe(10);
-			}
+			console.log(tx);
+
+			expect(Transaction.isValidTx(tx, allUtxoList)).toBe(true);
+			expect(tx?.txOuts[0].address).toBe(receiverAddress);
+			expect(tx?.txOuts[0].amount).toBe(10);
 		});
 	});
 

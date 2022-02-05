@@ -25,7 +25,7 @@ router.post("/create", (req, res) => {
 	);
 
   if(newTx === null) {
-    res.send("Transaction wasn't created.")
+		console.log("Transaction wasn't created.");
   }
-  res.send(newTx)
+	res.send(newTx)
 })
