@@ -1,6 +1,6 @@
 import { Block } from "./block";
 
-import _ from "lodash";
+import _, { has } from "lodash";
 import UnspentTxOutput from "../transaction/unspentTxOutput";
 import Transaction from "../transaction/transaction";
 
@@ -18,6 +18,10 @@ export default class Blockchain {
 	getFirstBlock = (): Block => {
 		return this.blocks[0];
 	};
+
+	getBlock = (hash: string): Block | undefined => {
+		return this.blocks.find((block) => block.hash === hash);
+	}
 
 	/**
 	 * @brief Add block to blockchain after validation
