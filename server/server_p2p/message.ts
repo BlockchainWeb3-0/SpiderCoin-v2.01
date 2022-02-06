@@ -35,6 +35,19 @@ class Message {
 		type: MessageType.RESPONSE_BLOCKCHAIN,
 		data: JSON.stringify(GlobalVar.blockchain.blocks),
 	});
+
+
+  // ***** ADDED *****
+  static queryTxpool = (): Message => ({
+    type: MessageType.QUERY_TRANSACTION_POOL,
+    data: null,
+  })
+
+  // ***** ADDED *****
+  static responseTxpool = (): Message => ({
+    type: MessageType.QUERY_TRANSACTION_POOL,
+    data: JSON.stringify(GlobalVar.txpool),
+  })
 }
 
 export {Message, MessageType}
