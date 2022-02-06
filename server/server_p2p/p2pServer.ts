@@ -2,7 +2,7 @@ import { response } from "express";
 import WebSocket from "ws";
 import { Server } from "ws";
 import { Block } from "../blockchain/structure/block";
-import { Blockchain } from "../blockchain/structure/blockchain";
+import Blockchain from "../blockchain/structure/blockchain";
 
 const sockets: WebSocket[] = [];
 const port = parseInt(process.env.P2P_PORT as string) || 6001;

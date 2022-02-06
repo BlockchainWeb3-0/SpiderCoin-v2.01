@@ -2,7 +2,7 @@ import { Block } from "./block";
 
 import _ from "lodash";
 
-export class Blockchain {
+export default class Blockchain {
 	blocks: Block[];
 
 	constructor() {
