@@ -1,7 +1,6 @@
 import express from "express"
 import bodyParser from "body-parser";
 import _ from "lodash";
-import GlobalVar from "../blockchain/globalVar";
 
 // import middlewares
 import cors from "./middlewares/cors";

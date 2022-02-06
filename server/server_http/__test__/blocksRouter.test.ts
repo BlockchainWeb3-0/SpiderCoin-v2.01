@@ -1,5 +1,4 @@
 import axios from "axios";
-import GlobalVar from "../../blockchain/globalVar";
 import { Block } from "../../blockchain/structure/block";
 import Transaction from "../../blockchain/transaction/transaction";
 import UnspentTxOutput from "../../blockchain/transaction/unspentTxOutput";
