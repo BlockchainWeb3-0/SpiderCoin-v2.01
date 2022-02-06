@@ -2,25 +2,11 @@ import WebSocket from "ws";
 import { Server } from "ws";
 import { Block } from "../blockchain/structure/block";
 import GlobalVar from "../blockchain/globalVar";
+import { Message, MessageType } from "./message";
 
 const sockets: WebSocket[] = [];
 const port = parseInt(process.env.P2P_PORT as string) || 6001;
 
-enum MessageType {
-	QUERY_LAST_BLOCK,
-	QUERY_ALL_BLOCK,
-	RESPONSE_BLOCKCHAIN,
-	QUERY_TRANSACTION_POOL,
-	RESPONSE_TRANSACTION_POOL,
-}
-
-class Message {
-	public type: MessageType;
-	public data: any;
-	constructor(type: MessageType, data: any) {
-		(this.type = type), (this.data = data);
-	}
-}
 
 const initP2PServer = () => {
 	const server: Server = new WebSocket.Server({ port });
@@ -42,7 +28,7 @@ const initConnection = (ws: WebSocket) => {
 	initMessageHandler(ws);
 
 	// Query last block from node
-	write(ws, queryLastBlock());
+	write(ws, Message.queryLastBlock());
 
 	// TODO : transaction pool query
 };
@@ -79,12 +65,12 @@ const initMessageHandler = (ws: WebSocket) => {
 			switch (message.type) {
 				// get QUERY_LAST_BLOCK message => response last block
 				case MessageType.QUERY_LAST_BLOCK:
-					write(ws, responseLastBlock());
+					write(ws, Message.responseLastBlock());
 					break;
 
 				// get QUERY_ALL_BLOCK message => response blockchain containing all blocks
 				case MessageType.QUERY_ALL_BLOCK:
-					write(ws, responseAllBlocks());
+					write(ws, Message.responseAllBlocks());
 					break;
 
 				case MessageType.RESPONSE_BLOCKCHAIN:
@@ -141,12 +127,12 @@ const handleBlockchainResponse = (receivedBlocks: Block[]) => {
 			const addSuccess = GlobalVar.blockchain.addBlock(lastBlockReceived);
 			if (addSuccess) {
 				console.log("Add received block to holding blockchain successfully");
-				broadcast(responseLastBlock());
+				broadcast(Message.responseLastBlock());
 			}
 		} else if (receivedBlocks.length === 1) {
 			// Received Blocks has genesis block only
 			// Query all blocks from connected peers
-			broadcast(queryAllBlocks());
+			broadcast(Message.queryAllBlocks());
 		} else {
 			console.log("Received block is longer than holding blockchain");
 			GlobalVar.blockchain.replaceBlocks(receivedBlocks);
@@ -171,24 +157,5 @@ const broadcast = (message: Message) => {
 	sockets.forEach((socket) => write(socket, message));
 };
 
-const queryLastBlock = (): Message => ({
-	type: MessageType.QUERY_LAST_BLOCK,
-	data: null,
-});
-
-const queryAllBlocks = (): Message => ({
-	type: MessageType.QUERY_ALL_BLOCK,
-	data: null,
-});
-
-const responseLastBlock = (): Message => ({
-	type: MessageType.RESPONSE_BLOCKCHAIN,
-	data: JSON.stringify(GlobalVar.blockchain.getLastBlock()),
-});
-
-const responseAllBlocks = (): Message => ({
-	type: MessageType.RESPONSE_BLOCKCHAIN,
-	data: JSON.stringify(GlobalVar.blockchain.blocks),
-});
 
 // TODO : define functions for transaction pool query and response
