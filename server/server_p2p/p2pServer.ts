@@ -1,8 +1,6 @@
-import { response } from "express";
 import WebSocket from "ws";
 import { Server } from "ws";
 import { Block } from "../blockchain/structure/block";
-import { Blockchain } from "../blockchain/structure/blockchain";
 import GlobalVar from "../blockchain/globalVar";
 
 const sockets: WebSocket[] = [];
@@ -20,20 +18,21 @@ class Message {
 	public type: MessageType;
 	public data: any;
 	constructor(type: MessageType, data: any) {
-		this.type = type;
-		this.data = data;
+		(this.type = type), (this.data = data);
 	}
 }
 
-const server: Server = new WebSocket.Server({ port });
-server.on("connection", (ws: WebSocket) => {
-	initConnection(ws);
-
-	console.log(`
-  ###################################
-  🕸 Server listening on port: ${port} 🕸
-  ###################################`);
-});
+const initP2PServer = () => {
+	const server: Server = new WebSocket.Server({ port });
+	server.on("connection", (ws: WebSocket) => {
+		initConnection(ws);
+	
+		console.log(`
+		###################################
+		🕸 Server listening on port: ${port} 🕸
+		###################################`);
+	});
+}
 
 const initConnection = (ws: WebSocket) => {
 	// Add conncected ws into sockets list
@@ -48,13 +47,21 @@ const initConnection = (ws: WebSocket) => {
 	// TODO : transaction pool query
 };
 
+
+const removeConnection = (ws: WebSocket) => {
+	console.log(`Closed connection with peer: ${ws.url}`);
+	sockets.splice(sockets.indexOf(ws), 1);
+};
+
+const closeConnectionToPeer = (ws: WebSocket) => {
+	console.log(`Starts to close connection to peer: ${ws.url}`);
+	ws.on("close", () => removeConnection(ws));
+}
+
 const initErrorHandler = (ws: WebSocket) => {
-	const closeConnection = (ws: WebSocket) => {
-		console.log(`Connection faild to peer: ${ws.url}`);
-		sockets.splice(sockets.indexOf(ws), 1);
-	};
-	ws.on("close", () => closeConnection(ws));
-	ws.on("error", () => closeConnection(ws));
+	console.log("Connection error found!");
+	ws.on("close", () => removeConnection(ws));
+	ws.on("error", () => removeConnection(ws));
 };
 
 const initMessageHandler = (ws: WebSocket) => {
