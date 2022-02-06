@@ -7,7 +7,7 @@ import cors from "./middlewares/cors";
 
 // import routers
 import {router as indexRouter} from "./routers/index"
-import {router as blocksRouter} from "./routers/blocks"
+import {router as blocksRouter} from "./routers/blocksRouter"
 
 const app = express();
 const port = parseInt(process.env.HTTP_PORT as string) || 3001;
