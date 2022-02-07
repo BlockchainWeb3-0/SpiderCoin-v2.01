@@ -137,40 +137,10 @@ export default class Transaction {
     );
     newSignedTx.txIns = newSignedTxIns;
 
-    return newSignedTx;
-  };
+    // 7. Add newSignedTx into Transaction pool
+    TransactionPool.addTxToTxpool(newSignedTx, utxoList, txpool);
 
-  /**
-   * Creates new transaction and add it to txpool
-   * @param receiverAddress
-   * @param sendingAmount
-   * @param senderAddress
-   * @param privateKey
-   * @param utxoList
-   * @param txpool
-   * @returns true when successfully done
-   */
-  static sendTx = (
-    receiverAddress: string,
-    sendingAmount: number,
-    senderAddress: string,
-    privateKey: string,
-    utxoList: UnspentTxOutput[],
-    txpool: Transaction[]
-  ) => {
-    const newTx: Transaction | null = Transaction.createTx(
-      receiverAddress,
-      sendingAmount,
-      senderAddress,
-      privateKey,
-      utxoList,
-      txpool
-    );
-    if (newTx === null) {
-      return null;
-    }
-    TransactionPool.addTxToTxpool(newTx, utxoList, txpool);
-    return newTx;
+    return newSignedTx;
   };
 
   static createTxListForMining = (minerAddress: string, miningReward: number, lastBlockIndex: number, txpool: Transaction[]): Transaction[] => {
