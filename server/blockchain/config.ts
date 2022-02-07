@@ -4,10 +4,10 @@ export const DIFFICULTY_ADJUSTMENT_INTERVAL_SECOND = 10;  // second
 export const DIFFICULTY_ADJUSTMENT_INTERVAL_BLOCK = 10;   // blocks
 
 export const GENESIS_TRANSACTION_DATA = {
-  id: 'ff21efb83712a97c5bab8babbf5e7e6b3af9fce90aae1fcf5dbe45e753e594ba',
+  id: '870ac8b6a60afb3a76a0deadd27a910f20161a288de1651a53542421ff3e2e1a',
   txIns: [{'signature': '', 'txOutId': '', 'txOutIndex': 0}],
   txOuts: [{
-      'address': '04875a5ee53110a1ce856f2fc549671456afcc62a510d96cb8e05ca0cb65f78c0b1fb880db8ac195cee93d2d6eff917e795f224d63a2c73319b1ce1e42f27395a4',
+      'address': '04d0ebf3414ddab3892db9aab66d8c54386e7bafb1b60fa6a4e64236ebbee6640f6d836f266e701f5102025854227f3bf35f863e2218479633183db0b41c163bcf',
       'amount': 50
   }],
 }

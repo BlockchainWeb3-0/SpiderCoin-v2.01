@@ -23,6 +23,7 @@ export default class TxIn {
 		this.txOutId = txOutId;
 		this.txOutIndex = txOutIndex;
 		this.signature = signature;
+		this.amount = 0;
 	}
 	
 	/**
