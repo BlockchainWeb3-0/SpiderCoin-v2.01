@@ -167,13 +167,17 @@ export default class Transaction {
       txpool
     );
     if (newTx === null) {
-      return false;
+      return null;
     }
     TransactionPool.addTxToTxpool(newTx, utxoList, txpool);
-    return true;
+    return newTx;
   };
 
-
+  static createTxListForMining = (minerAddress: string, miningReward: number, lastBlockIndex: number, txpool: Transaction[]): Transaction[] => {
+    const rewardTx: Transaction = this.createRewardTx(minerAddress, lastBlockIndex + 1);
+    const txListForMining: Transaction[] = [rewardTx, ...txpool]
+    return txListForMining;
+  }
 
   /********************************/
   /***** Validation Functions *****/
@@ -301,7 +305,7 @@ export default class Transaction {
       return false;
     }
 
-    if (rewardTx.txIns[0].txOutIndex === blockIndex) {
+    if (rewardTx.txIns[0].txOutIndex !== blockIndex) {
       console.log("Invalid block hegiht");
       return false;
     }
@@ -331,7 +335,6 @@ export default class Transaction {
     for (const key in countDuplicates) {
       if (countDuplicates[key] > 1) {
         console.log(`Duplicate Tx found: ${key}`);
-
         return true;
       }
     }

@@ -1,6 +1,7 @@
 import { ec } from "elliptic"
 import _ from "lodash";
 import { existsSync, readFileSync, unlinkSync, writeFileSync, mkdirSync } from "fs";
+import UnspentTxOutput from "../transaction/unspentTxOutput";
 
 const EC = new ec("secp256k1");
 
@@ -38,8 +39,8 @@ export default class Wallet {
 	static generatePrivatePublicKeys = () => {
 		const keyPair = EC.genKeyPair();
 		const privateKey = keyPair.getPrivate().toString(16);
-    const publicKey = keyPair.getPublic("hex");
-		return {privateKey, publicKey};
+		const publicKey = keyPair.getPublic("hex");
+		return { privateKey, publicKey };
 	};
 
 	static getPublicKeyFromPrivateKey = (privateKey: string): string => {
@@ -74,7 +75,14 @@ export default class Wallet {
 		return signature;
 	};
 
-
+	static getBalance = (
+		address: string,
+		utxoList: UnspentTxOutput[]
+	): number => {
+		const myUtxoList: UnspentTxOutput[] = UnspentTxOutput.findMyUtxoList(address, utxoList);
+		const myBalance = myUtxoList.map((utxo) => utxo.amount).reduce((a,b) => a+b, 0);
+		return myBalance;
+	};
 
 	/********************************/
 	/***** Validation Functions *****/
@@ -90,7 +98,7 @@ export default class Wallet {
 	};
 
 	/**
-	 * @brief Address must be 130 length, contain only hex, and start with "04"  
+	 * @brief Address must be 130 length, contain only hex, and start with "04"
 	 * @param address public key
 	 * @returns true if address is valid
 	 */
@@ -98,16 +106,14 @@ export default class Wallet {
 		if (address.length !== 130) {
 			console.log("Invalid address length");
 			return false;
-		}
-		else if (!address.startsWith("04")) {
+		} else if (!address.startsWith("04")) {
 			console.log("Address must start with 04");
 			return false;
-		}
-		else if (address.match("^[a-fA-F0-9]+$") === null) {
+		} else if (address.match("^[a-fA-F0-9]+$") === null) {
 			console.log("Only hex characters are allowed for address");
 			return false;
 		}
-		
+
 		return true;
-	}
+	};
 }
