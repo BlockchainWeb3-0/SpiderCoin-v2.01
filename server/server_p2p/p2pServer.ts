@@ -8,19 +8,24 @@ import UnspentTxOutput from "../blockchain/transaction/unspentTxOutput";
 import TransactionPool from "../blockchain/transaction/transactionPool";
 
 const sockets: WebSocket[] = [];
-const port = parseInt(process.env.P2P_PORT as string) || 6001;
+const p2pPort = parseInt(process.env.P2P_PORT as string) || 6001;
+let server: Server;
 
+const getPeerList = (): WebSocket[] => sockets;
 
-const initP2PServer = () => {
-	const server: Server = new WebSocket.Server({ port });
+const getP2PServer = (): Server => server;
+
+const initP2PServer = (port: number) => {
+	server = new WebSocket.Server({ port });
 	server.on("connection", (ws: WebSocket) => {
 		initConnection(ws);
-	
-		console.log(`
-		###################################
-		🕸 Server listening on port: ${port} 🕸
-		###################################`);
 	});
+	console.log(`🕸 Listening websocket p2p port on: ${port} 🕸`);
+}
+
+const offP2PServer = () => {
+	console.log(`🗑 Disconnected websocket p2p port on: ${p2pPort} 🗑`);
+	server.close();
 }
 
 const initConnection = (ws: WebSocket) => {
@@ -37,29 +42,28 @@ const initConnection = (ws: WebSocket) => {
 	write(ws, Message.queryTxpool());
 };
 
-const connectToPeers = (newPeers: string[]): void => {
-	newPeers.forEach(peer => {
-		const ws = new WebSocket(peer);
-		ws.on("Open", () => {
-			console.log(`Connected to peer: ${ws.url}`);
-			initConnection(ws);
-		})
-		ws.on("error", (error) => {
-			console.log("Connection failed!");
-			console.log(error);
-		})
+const connectToPeers = (peer: string): void => {
+	const ws: WebSocket = new WebSocket(peer);
+	ws.on("Open", () => {
+		console.log(`Connected to peer: ${ws.url}`);
+		initConnection(ws);
 	})
+	ws.on("error", (error) => {
+		console.log("Connection failed!");
+		console.log(error);
+	})
+}
+
+const disconnectToPeer = (peer: string) => {
+	const ws: WebSocket = new WebSocket(peer);
+	console.log(`Starts to close connection to peer: ${ws.url}`);
+	ws.on("close", () => removeConnection(ws));
 }
 
 const removeConnection = (ws: WebSocket) => {
 	console.log(`Closed connection with peer: ${ws.url}`);
 	sockets.splice(sockets.indexOf(ws), 1);
 };
-
-const closeConnectionToPeer = (ws: WebSocket) => {
-	console.log(`Starts to close connection to peer: ${ws.url}`);
-	ws.on("close", () => removeConnection(ws));
-}
 
 const initErrorHandler = (ws: WebSocket) => {
 	console.log("Connection error found!");
@@ -223,7 +227,11 @@ const broadcast = (message: Message) => {
 export {
 	initP2PServer,
 	connectToPeers,
-	closeConnectionToPeer,
+	disconnectToPeer,
 	broadcastLastBlock,
 	broadcastTxpool,
+	getPeerList,
+	offP2PServer,
+	getP2PServer,
+	p2pPort
 };

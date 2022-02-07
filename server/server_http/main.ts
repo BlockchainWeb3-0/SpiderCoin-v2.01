@@ -10,7 +10,8 @@ import {router as indexRouter} from "./routers/index"
 import {router as blocksRouter} from "./routers/blocksRouter"
 import {router as utxosRouter} from "./routers/utxosRouter"
 import {router as transacionRouter} from "./routers/transactionRouter"
-import {router as mypageRouter} from "./routers/mypageRouter"
+import {router as walletRouter} from "./routers/walletRouter"
+import {router as peerRouter} from "./routers/peerRouter"
 
 const app = express();
 const port = parseInt(process.env.HTTP_PORT as string) || 3001;
@@ -23,7 +24,8 @@ app.use("/", indexRouter);
 app.use("/blocks", blocksRouter);
 app.use("/utxos", utxosRouter);
 app.use("/transaction", transacionRouter);
-app.use("/mypage", mypageRouter);
+app.use("/wallet", walletRouter);
+app.use("/peer", peerRouter);
 
 const server = app.listen(app.get("port"), () => {
   console.log(`

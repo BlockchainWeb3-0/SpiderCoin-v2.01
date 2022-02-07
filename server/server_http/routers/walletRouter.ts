@@ -4,6 +4,10 @@ import Wallet from "../../blockchain/wallet/wallet";
 
 export const router = express.Router();
 
+router.get("/create", (req, res) => {
+	return Wallet.generatePrivatePublicKeys();
+})
+
 router.get("/balance/:address", (req, res) => {
   const walletAddress: string = req.params.address;
   // ! exception handling : UTXO list could be null

@@ -33,6 +33,7 @@ export default class Blockchain {
 
 		// ! exception handling : new block could be null
 		if (newBlock === null) {
+			console.log("Invalid newBlock");
 			return false;
 		}
 

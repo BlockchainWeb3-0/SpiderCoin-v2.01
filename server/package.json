@@ -5,7 +5,8 @@
   "main": "server.ts",
   "scripts": {
     "test": "jest",
-    "server": "nodemon ./server_http/main.ts"
+    "server": "nodemon ./server_http/main.ts",
+    "server2": "nodemon ./server_http2/main.ts"
   },
   "repository": {
     "type": "git",
