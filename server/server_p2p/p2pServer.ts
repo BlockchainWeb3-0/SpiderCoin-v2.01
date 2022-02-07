@@ -1,39 +1,32 @@
-import { response } from "express";
 import WebSocket from "ws";
 import { Server } from "ws";
 import { Block } from "../blockchain/structure/block";
-import { Blockchain } from "../blockchain/structure/blockchain";
 import GlobalVar from "../blockchain/globalVar";
+import { Message, MessageType } from "./message";
+import Transaction from "../blockchain/transaction/transaction";
+import UnspentTxOutput from "../blockchain/transaction/unspentTxOutput";
+import TransactionPool from "../blockchain/transaction/transactionPool";
 
 const sockets: WebSocket[] = [];
-const port = parseInt(process.env.P2P_PORT as string) || 6001;
+const p2pPort = parseInt(process.env.P2P_PORT as string) || 6001;
+let server: Server;
 
-enum MessageType {
-	QUERY_LAST_BLOCK,
-	QUERY_ALL_BLOCK,
-	RESPONSE_BLOCKCHAIN,
-	QUERY_TRANSACTION_POOL,
-	RESPONSE_TRANSACTION_POOL,
+const getPeerList = (): WebSocket[] => sockets;
+
+const getP2PServer = (): Server => server;
+
+const initP2PServer = (port: number) => {
+	server = new WebSocket.Server({ port });
+	server.on("connection", (ws: WebSocket) => {
+		initConnection(ws);
+	});
+	console.log(`🕸 Listening websocket p2p port on: ${port} 🕸`);
 }
 
-class Message {
-	public type: MessageType;
-	public data: any;
-	constructor(type: MessageType, data: any) {
-		this.type = type;
-		this.data = data;
-	}
+const offP2PServer = () => {
+	console.log(`🗑 Disconnected websocket p2p port on: ${p2pPort} 🗑`);
+	server.close();
 }
-
-const server: Server = new WebSocket.Server({ port });
-server.on("connection", (ws: WebSocket) => {
-	initConnection(ws);
-
-	console.log(`
-  ###################################
-  🕸 Server listening on port: ${port} 🕸
-  ###################################`);
-});
 
 const initConnection = (ws: WebSocket) => {
 	// Add conncected ws into sockets list
@@ -42,19 +35,40 @@ const initConnection = (ws: WebSocket) => {
 	initErrorHandler(ws);
 	initMessageHandler(ws);
 
-	// Query last block from node
-	write(ws, queryLastBlock());
+	// Query last block from connected node
+	write(ws, Message.queryLastBlock());
+	
+	// Query transaction pool from connected node
+	write(ws, Message.queryTxpool());
+};
 
-	// TODO : transaction pool query
+const connectToPeers = (peer: string): void => {
+	const ws: WebSocket = new WebSocket(peer);
+	ws.on("Open", () => {
+		console.log(`Connected to peer: ${ws.url}`);
+		initConnection(ws);
+	})
+	ws.on("error", (error) => {
+		console.log("Connection failed!");
+		console.log(error);
+	})
+}
+
+const disconnectToPeer = (peer: string) => {
+	const ws: WebSocket = new WebSocket(peer);
+	console.log(`Starts to close connection to peer: ${ws.url}`);
+	ws.on("close", () => removeConnection(ws));
+}
+
+const removeConnection = (ws: WebSocket) => {
+	console.log(`Closed connection with peer: ${ws.url}`);
+	sockets.splice(sockets.indexOf(ws), 1);
 };
 
 const initErrorHandler = (ws: WebSocket) => {
-	const closeConnection = (ws: WebSocket) => {
-		console.log(`Connection faild to peer: ${ws.url}`);
-		sockets.splice(sockets.indexOf(ws), 1);
-	};
-	ws.on("close", () => closeConnection(ws));
-	ws.on("error", () => closeConnection(ws));
+	console.log("Connection error found!");
+	ws.on("close", () => removeConnection(ws));
+	ws.on("error", () => removeConnection(ws));
 };
 
 const initMessageHandler = (ws: WebSocket) => {
@@ -70,16 +84,18 @@ const initMessageHandler = (ws: WebSocket) => {
 
 			console.log(`Received message: ${JSON.stringify(message)}`);
 			switch (message.type) {
-				// get QUERY_LAST_BLOCK message => response last block
+				// Received QUERY_LAST_BLOCK message => response last block
 				case MessageType.QUERY_LAST_BLOCK:
-					write(ws, responseLastBlock());
+					write(ws, Message.responseLastBlock());
 					break;
 
-				// get QUERY_ALL_BLOCK message => response blockchain containing all blocks
+				// Received QUERY_ALL_BLOCK message => response blockchain containing all blocks
 				case MessageType.QUERY_ALL_BLOCK:
-					write(ws, responseAllBlocks());
+					write(ws, Message.responseAllBlocks());
 					break;
-
+					
+					
+				// Received RESPONSE_BLOCKCHAIN message => replace blockchain if received one is longer 
 				case MessageType.RESPONSE_BLOCKCHAIN:
 					const receivedBlocks: Block[] = JSON.parse(message.data);
 					// ! exception handling : Received block could be null
@@ -90,6 +106,34 @@ const initMessageHandler = (ws: WebSocket) => {
 						break;
 					}
 					handleBlockchainResponse(receivedBlocks);
+					break;
+
+				// Received QUERY_TRANSACTION_POOL message => reponse txpool
+				case MessageType.QUERY_TRANSACTION_POOL:
+					write(ws, Message.responseTxpool());
+					break;
+
+				// Received RESPONSE_TRANSACTION_POOL message => push them into my txpool
+				case MessageType.RESPONSE_TRANSACTION_POOL:
+					const receivedTxList: Transaction[] = JSON.parse(message.data);
+					// ! exception handling : Txpool block data could be null
+					if (receivedTxList === null) {
+						console.log(`Invalid Txpool data: ${JSON.stringify(message.data)}`);
+						break;
+					}
+					receivedTxList.forEach((tx: Transaction) => {
+						try {
+							// ! exception handling : UTXO list could be null
+							if (GlobalVar.utxoList === null ){
+								console.log("Invalid UTXO list");
+								return;
+							}
+							handleReceivedTx(tx, GlobalVar.utxoList, GlobalVar.txpool.txList);
+							broadcastTxpool();
+						} catch (error) {
+							console.log(error);
+						}
+					})
 					break;
 
 				default:
@@ -134,18 +178,34 @@ const handleBlockchainResponse = (receivedBlocks: Block[]) => {
 			const addSuccess = GlobalVar.blockchain.addBlock(lastBlockReceived);
 			if (addSuccess) {
 				console.log("Add received block to holding blockchain successfully");
-				broadcast(responseLastBlock());
+				broadcast(Message.responseLastBlock());
 			}
 		} else if (receivedBlocks.length === 1) {
 			// Received Blocks has genesis block only
 			// Query all blocks from connected peers
-			broadcast(queryAllBlocks());
+			broadcast(Message.queryAllBlocks());
 		} else {
 			console.log("Received block is longer than holding blockchain");
 			GlobalVar.blockchain.replaceBlocks(receivedBlocks);
 		}
 	}
 };
+
+const handleReceivedTx = (
+	tx: Transaction,
+	utxoList: UnspentTxOutput[],
+	txpool: Transaction[]
+) => {
+	TransactionPool.addTxToTxpool(tx, utxoList, txpool);
+};
+
+const broadcastLastBlock = (): void => {
+	broadcast(Message.responseLastBlock());
+}
+
+const broadcastTxpool = (): void => {
+	broadcast(Message.responseTxpool());
+}
 
 /**
  * @brief sends a json type message to websocket
@@ -164,24 +224,14 @@ const broadcast = (message: Message) => {
 	sockets.forEach((socket) => write(socket, message));
 };
 
-const queryLastBlock = (): Message => ({
-	type: MessageType.QUERY_LAST_BLOCK,
-	data: null,
-});
-
-const queryAllBlocks = (): Message => ({
-	type: MessageType.QUERY_ALL_BLOCK,
-	data: null,
-});
-
-const responseLastBlock = (): Message => ({
-	type: MessageType.RESPONSE_BLOCKCHAIN,
-	data: JSON.stringify(GlobalVar.blockchain.getLastBlock()),
-});
-
-const responseAllBlocks = (): Message => ({
-	type: MessageType.RESPONSE_BLOCKCHAIN,
-	data: JSON.stringify(GlobalVar.blockchain.blocks),
-});
-
-// TODO : define functions for transaction pool query and response
+export {
+	initP2PServer,
+	connectToPeers,
+	disconnectToPeer,
+	broadcastLastBlock,
+	broadcastTxpool,
+	getPeerList,
+	offP2PServer,
+	getP2PServer,
+	p2pPort
+};

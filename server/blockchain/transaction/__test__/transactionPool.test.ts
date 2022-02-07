@@ -15,8 +15,9 @@ describe("transactionPool test", () => {
     let txpool: Transaction[] = [];
     let newTx: Transaction | null;
     let result: boolean;
+    let txpool_temp: Transaction[];
     beforeAll(()=>{
-      receiverAddress = "04d2d156b54c47d0ad7acca55ad5e484eb0191a6d783e7473037d4d9f4af66455ee937826090e71dbbacc0a7e7540d2850f92812bce1f87180cac3900541794274";
+      receiverAddress = Wallet.generatePrivatePublicKeys().publicKey;
       sendingAmount = 20;
       sendingAddress =Wallet.getPulicKeyFromWallet();
       privateKey = Wallet.getPrivateKeyFromWallet();
@@ -31,7 +32,7 @@ describe("transactionPool test", () => {
         utxoListToBeUsed.push(utxo);
       }
 
-      let txIn1 = new TxIn("id1", 1, "");
+      let txIn1 = TxIn.createUnSignedTxIn(utxoListToBeUsed[1]);
       const txOuts1 = TxOut.createTxOuts(receiverAddress, 10, Wallet.getPulicKeyFromWallet(), 0);
       const tx1 = new Transaction("", [txIn1], txOuts1)
       tx1.id = Transaction.calTxId(tx1)
@@ -53,7 +54,13 @@ describe("transactionPool test", () => {
       } else {
         result = TransactionPool.addTxToTxpool(newTx, utxoListToBeUsed, txpool);
       }
+      txpool_temp = txpool;
     })
+
+    afterEach(()=> {
+      txpool = txpool_temp
+    })
+
     test("Adding tx into txPool has done successfully?", () => {
       expect(result).toBe(true);
     })
@@ -71,14 +78,17 @@ describe("transactionPool test", () => {
       const lastTx = txpool[txpool.length-1];
       expect(lastTx.id).toBe(newTx?.id)
       expect(lastTx.txOuts[0].address).toBe(receiverAddress);
+      expect(Transaction.isValidTx(lastTx, utxoListToBeUsed)).toBe(true);
     })
-    
-    test("If new transaction is corrupted, return false", () => {
-      txpool[txpool.length-1].id = "corrupted id";
-      const lastTx = txpool[txpool.length-1];
-      
-      expect(Transaction.isValidTx(lastTx, utxoListToBeUsed)).toBe(false);
+
+    test("Remove invalid transactions from transaction pool", () => {
+      const txpoolLength: number = txpool.length;
+      const invalidTx = new Transaction("", [], []);
+      txpool.push(invalidTx);
+
+      txpool = TransactionPool.removeInvalidTxsFromTxpool(utxoListToBeUsed, txpool);
+      const txpoolLengthAfterRemoving: number = txpool.length;
+      expect(txpoolLengthAfterRemoving).toBe(txpoolLength);
     })
   })
-
 })

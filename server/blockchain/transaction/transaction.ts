@@ -137,43 +137,17 @@ export default class Transaction {
     );
     newSignedTx.txIns = newSignedTxIns;
 
+    // 7. Add newSignedTx into Transaction pool
+    TransactionPool.addTxToTxpool(newSignedTx, utxoList, txpool);
+
     return newSignedTx;
   };
 
-  /**
-   * Creates new transaction and add it to txpool
-   * @param receiverAddress
-   * @param sendingAmount
-   * @param senderAddress
-   * @param privateKey
-   * @param utxoList
-   * @param txpool
-   * @returns true when successfully done
-   */
-  static sendTx = (
-    receiverAddress: string,
-    sendingAmount: number,
-    senderAddress: string,
-    privateKey: string,
-    utxoList: UnspentTxOutput[],
-    txpool: Transaction[]
-  ) => {
-    const newTx: Transaction | null = Transaction.createTx(
-      receiverAddress,
-      sendingAmount,
-      senderAddress,
-      privateKey,
-      utxoList,
-      txpool
-    );
-    if (newTx === null) {
-      return false;
-    }
-    TransactionPool.addTxToTxpool(newTx, utxoList, txpool);
-    return true;
-  };
-
-
+  static createTxListForMining = (minerAddress: string, miningReward: number, lastBlockIndex: number, txpool: Transaction[]): Transaction[] => {
+    const rewardTx: Transaction = this.createRewardTx(minerAddress, lastBlockIndex + 1);
+    const txListForMining: Transaction[] = [rewardTx, ...txpool]
+    return txListForMining;
+  }
 
   /********************************/
   /***** Validation Functions *****/
@@ -301,7 +275,7 @@ export default class Transaction {
       return false;
     }
 
-    if (rewardTx.txIns[0].txOutIndex === blockIndex) {
+    if (rewardTx.txIns[0].txOutIndex !== blockIndex) {
       console.log("Invalid block hegiht");
       return false;
     }
@@ -331,7 +305,6 @@ export default class Transaction {
     for (const key in countDuplicates) {
       if (countDuplicates[key] > 1) {
         console.log(`Duplicate Tx found: ${key}`);
-
         return true;
       }
     }

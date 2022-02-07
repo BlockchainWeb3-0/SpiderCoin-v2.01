@@ -1,16 +1,17 @@
 import express from "express"
 import bodyParser from "body-parser";
 import _ from "lodash";
-import GlobalVar from "../blockchain/globalVar";
 
 // import middlewares
 import cors from "./middlewares/cors";
 
 // import routers
 import {router as indexRouter} from "./routers/index"
-import {router as blocksRouter} from "./routers/blocks"
-import {router as utxosRouter} from "./routers/utxos"
-import {router as transacionRouter} from "./routers/transaction"
+import {router as blocksRouter} from "./routers/blocksRouter"
+import {router as utxosRouter} from "./routers/utxosRouter"
+import {router as transacionRouter} from "./routers/transactionRouter"
+import {router as walletRouter} from "./routers/walletRouter"
+import {router as peerRouter} from "./routers/peerRouter"
 
 const app = express();
 const port = parseInt(process.env.HTTP_PORT as string) || 3001;
@@ -23,6 +24,8 @@ app.use("/", indexRouter);
 app.use("/blocks", blocksRouter);
 app.use("/utxos", utxosRouter);
 app.use("/transaction", transacionRouter);
+app.use("/wallet", walletRouter);
+app.use("/peer", peerRouter);
 
 const server = app.listen(app.get("port"), () => {
   console.log(`

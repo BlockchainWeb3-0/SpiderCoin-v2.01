@@ -21,6 +21,16 @@ describe("Rotuers test", () => {
 		});
 	});
 
+	// * blocksRouter
+	describe("utxos Router connection test", () => {
+		test("GET : /blocks", async () => {
+			routerParams = {...routerParams, url: "/blocks"}
+			const result = await axios.request(routerParams);
+      
+      expect(result.status).toBe(200);
+		});
+	});
+
 	// * utxosRouter
 	describe("utxos Router connection test", () => {
 		test("GET : /utxos", async () => {

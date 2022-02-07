@@ -31,10 +31,9 @@ export default class TransactionPool {
 		txpool: Transaction[]
 	): boolean => {
 		/**
-		 * validates
-		 * 1. transaction
-		 * 2. transaction structure
-		 * 3. transaction pool
+		 * 1. Is valid transaction?
+		 * 2. Is Valid transaction structure?
+		 * 3. Is there duplicates in transaction pool?
 		 */
 		if (!Transaction.isValidTx(newTx, utxoList)) {
 			console.log("Invalid transaction");
@@ -52,6 +51,36 @@ export default class TransactionPool {
 		return true;
 	};
 
+	/**
+	 * @brief Remove invalid transactions from txpool
+	 * @param utxoList
+	 * @param txpool
+	 * @return txpool that was removed invalid transcations
+	 */
+	static removeInvalidTxsFromTxpool = (
+		utxoList: UnspentTxOutput[],
+		txpool: Transaction[]
+	): Transaction[] => {
+		const invalidTxList: Transaction[] = [];
+
+		for (const tx of txpool) {
+			if (!Transaction.isValidTx(tx, utxoList)) {
+				invalidTxList.push(tx);
+			}
+		}
+
+		if (invalidTxList.length > 0) {
+			console.log("Found invalid transactions from txpool");
+			txpool = _.without(txpool, ...invalidTxList);
+			console.log("Removed invalid transactions successfully");
+		} else {
+			console.log(
+				"Fount nothing invalid, all transactions from txpool are valid"
+			);
+		}
+		
+		return txpool
+	};
 
 	/********************************/
 	/***** Validation Functions *****/
@@ -69,11 +98,13 @@ export default class TransactionPool {
 	): boolean => {
 		const txInListFromTxpool: TxIn[] = this.getEveryTxInsFromTxpool(txpool);
 
-		const containsTxIn = (txInList: TxIn[], txIn: TxIn): TxIn | undefined => {
-			return txInList.find(
-				(txInFromList) =>
-					txInFromList.txOutId === txIn.txOutId &&
-					txInFromList.txOutIndex === txIn.txOutIndex
+		const containsTxIn = (txInList: TxIn[], txIn: TxIn): boolean => {
+			return (
+				txInList.find(
+					(txInFromList) =>
+						txInFromList.txOutId === txIn.txOutId &&
+						txInFromList.txOutIndex === txIn.txOutIndex
+				) !== undefined
 			);
 		};
 

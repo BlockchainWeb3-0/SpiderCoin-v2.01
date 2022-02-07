@@ -1,4 +1,6 @@
 import Wallet from "../wallet";
+import * as config from "../../config";
+import GlobalVar from "../../globalVar";
 
 describe("wallet test", ()=>{
   describe("toHexString func test", () => {
@@ -13,5 +15,16 @@ describe("wallet test", ()=>{
       const hexString = Wallet.decimalArrayToHexString(decimalArray);
       expect(hexString).toBe("260c3c");
     });
+  })
+  describe("getBalance function test", () => {
+    test("Balance of the address that has Genesis Block reward === 50", () => {
+      if (GlobalVar.utxoList)
+      expect(
+        Wallet.getBalance(
+          config.GENESIS_TRANSACTION_DATA.txOuts[0].address,
+          GlobalVar.utxoList
+        )
+      ).toBe(50);
+    })
   })
 })

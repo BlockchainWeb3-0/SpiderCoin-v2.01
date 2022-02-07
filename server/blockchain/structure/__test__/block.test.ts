@@ -36,14 +36,8 @@ describe("Block class validation", () => {
     if(newBlock === null) {
       return expect(newBlock).not.toBe(null)
     }
-
-		expect(typeof newBlock.header.version).toBe("string");
-		expect(typeof newBlock.header.index).toBe("number");
-		expect(typeof newBlock.header.prevHash).toBe("string");
-		expect(typeof newBlock.header.merkleRoot).toBe("string");
-		expect(typeof newBlock.header.timestamp).toBe("number");
-		expect(typeof newBlock.header.difficulty).toBe("number");
-		expect(typeof newBlock.header.nonce).toBe("number");
+    
+    expect(Block.isValidBlockStructure(newBlock));
 	});
 
 	test("Compare new block to lastBlock", () => {
