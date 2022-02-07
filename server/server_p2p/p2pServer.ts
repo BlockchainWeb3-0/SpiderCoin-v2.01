@@ -113,12 +113,18 @@ const initMessageHandler = (ws: WebSocket) => {
 				// Received RESPONSE_TRANSACTION_POOL message => push them into my txpool
 				case MessageType.RESPONSE_TRANSACTION_POOL:
 					const receivedTxList: Transaction[] = JSON.parse(message.data);
+					// ! exception handling : Txpool block data could be null
 					if (receivedTxList === null) {
 						console.log(`Invalid Txpool data: ${JSON.stringify(message.data)}`);
 						break;
 					}
 					receivedTxList.forEach((tx: Transaction) => {
 						try {
+							// ! exception handling : UTXO list could be null
+							if (GlobalVar.utxoList === null ){
+								console.log("Invalid UTXO list");
+								return;
+							}
 							handleReceivedTx(tx, GlobalVar.utxoList, GlobalVar.txpool.txList);
 							broadcastTxpool();
 						} catch (error) {

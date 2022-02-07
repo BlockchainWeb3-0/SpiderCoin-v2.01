@@ -301,7 +301,7 @@ export default class Transaction {
       return false;
     }
 
-    if (rewardTx.txIns[0].txOutIndex === blockIndex) {
+    if (rewardTx.txIns[0].txOutIndex !== blockIndex) {
       console.log("Invalid block hegiht");
       return false;
     }
@@ -331,7 +331,6 @@ export default class Transaction {
     for (const key in countDuplicates) {
       if (countDuplicates[key] > 1) {
         console.log(`Duplicate Tx found: ${key}`);
-
         return true;
       }
     }

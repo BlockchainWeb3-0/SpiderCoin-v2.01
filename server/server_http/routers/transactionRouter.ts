@@ -14,7 +14,12 @@ router.get("/", (req, res) => {
 router.post("/create", (req, res) => {
 	const { receiverAddress, sendingAmount, senderAddress, privateKey } =
 		req.body;
-
+	// ! exception handling : UTXO list could be null
+	if (GlobalVar.utxoList === null ){
+		console.log("Invalid UTXO list");
+		res.send(null);
+		return;
+	}
 	const newTx: Transaction | null = Transaction.createTx(
 		receiverAddress,
 		sendingAmount,
@@ -24,6 +29,7 @@ router.post("/create", (req, res) => {
 		GlobalVar.txpool.txList
 	);
 
+	// ! exception handling : newTx could be null
   if(newTx === null) {
 		console.log("Transaction wasn't created.");
   }

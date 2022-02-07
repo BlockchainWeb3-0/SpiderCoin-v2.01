@@ -1,6 +1,6 @@
 import { Block } from "./block";
 
-import _, { has } from "lodash";
+import _ from "lodash";
 import UnspentTxOutput from "../transaction/unspentTxOutput";
 import Transaction from "../transaction/transaction";
 
@@ -30,7 +30,6 @@ export default class Blockchain {
 	 */
 	addBlock = (newBlock: Block): boolean => {
 		const lastBlock: Block = this.getLastBlock();
-		// const newBlock: Block | null = Block.getNewBlock(lastBlock, data);
 
 		// ! exception handling : new block could be null
 		if (newBlock === null) {
@@ -93,7 +92,8 @@ export default class Blockchain {
 				utxoList,
 				currentBlock.header.index
 			);
-			
+
+			// ! exception handling : UTXO list could be null
 			if (utxoList === null) {
 				console.log("Invalid transaction in blockchain");
 				return false;
@@ -112,16 +112,27 @@ export default class Blockchain {
 		 * 2. check if there are duplicate transactions
 		 * 3. validates normal transactions 
 		 */
-		const firstTx = txData[0];
 
+		// 1. first Tx must be reward tranasction
+		const firstTx = txData[0];
+		if (!Transaction.isValidRewardTx(firstTx, blockIndex)) {
+			console.log("Invalid reward Tx!");
+			return false;
+		}
+		
+		// 2. check if there are duplicate transactions
+		if (Transaction.hasDuplicateTx(txData) ) {
+			console.log("Invalid Tx Data. Found duplicate tx.");
+			return false;
+		}
+
+		// 3. validates normal transactions 
 		const normalTxList: Transaction[] = txData.slice(1);
 		const isValidNormalTxList = normalTxList
 			.map((tx) => Transaction.isValidTx(tx, utxoList))
 			.reduce((a, b) => a && b, true);
 
 		return (
-			Transaction.isValidRewardTx(firstTx, blockIndex) &&
-			!Transaction.hasDuplicateTx(txData) &&
 			isValidNormalTxList
 		);
 	};
