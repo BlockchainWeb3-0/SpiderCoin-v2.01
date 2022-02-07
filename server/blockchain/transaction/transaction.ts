@@ -167,13 +167,17 @@ export default class Transaction {
       txpool
     );
     if (newTx === null) {
-      return false;
+      return null;
     }
     TransactionPool.addTxToTxpool(newTx, utxoList, txpool);
-    return true;
+    return newTx;
   };
 
-
+  static createTxListForMining = (minerAddress: string, miningReward: number, lastBlockIndex: number, txpool: Transaction[]): Transaction[] => {
+    const rewardTx: Transaction = this.createRewardTx(minerAddress, lastBlockIndex + 1);
+    const txListForMining: Transaction[] = [rewardTx, ...txpool]
+    return txListForMining;
+  }
 
   /********************************/
   /***** Validation Functions *****/

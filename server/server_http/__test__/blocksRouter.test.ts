@@ -7,11 +7,10 @@ import Wallet from "../../blockchain/wallet/wallet";
 describe("Blocks Router test", () => {
 	let receiverAddress: string;
 	let sendingAmount: number;
-	let senderAddress: string;
-	let privateKey: string;
+	let minerAddress: string;
 	let getParams: object;
 	let postParams: object;
-	let tx: Transaction;
+	let newTx: Transaction;
 
 	let allUtxoList: UnspentTxOutput[];
 
@@ -37,23 +36,20 @@ describe("Blocks Router test", () => {
 		allUtxoList = getUtxoResult.data;
 
 		receiverAddress = Wallet.generatePrivatePublicKeys().publicKey;
-		senderAddress = Wallet.getPulicKeyFromWallet();
-		privateKey = Wallet.getPrivateKeyFromWallet();
+		minerAddress = Wallet.getPulicKeyFromWallet();
 		sendingAmount = 10;
 
 		const createTxParams: object = {
 			method: "post",
 			baseURL: "http://localhost:3001",
-			url: "/transaction/create",
+			url: "/transaction/send",
 			data: {
 				receiverAddress,
 				sendingAmount,
-				senderAddress,
-				privateKey,
 			},
 		};
 		const createTxResult = await axios.request(createTxParams);
-		tx = createTxResult.data;
+		newTx = createTxResult.data;
 
 		getParams = {
 			method: "get",
@@ -73,7 +69,7 @@ describe("Blocks Router test", () => {
 		const mineBlockPostParams = {
 			...postParams,
 			url: "/blocks/mineBlock",
-			data: { txList: [tx] },
+			data: { minerAddress },
 		};
 		const mineBlockResult = await axios.request(mineBlockPostParams);
 		const getLastBlockGetParams = { ...getParams, url: "/blocks/lastBlock" };
@@ -89,25 +85,27 @@ describe("Blocks Router test", () => {
 		expect(result.data.blocks[0]).toEqual(Block.getGenesisBlock());
 	});
 
-	test("mined block === last block of blockchain", async () => {
+	test("mined block === last block of blockchain", () => {
 		expect(minedBlock).toEqual(lastBlock);
 	});
 
+	test("mined Block is valid", () => {
+		expect(Block.isValidBlockStructure(minedBlock)).toBe(true);
+	})
+
 	test("Find a block using block's hash", async () => {
     const getBlockParams = {...getParams, url: `/blocks/findBlock/${lastBlockHash}`}
-    const getBlockResult = await axios.request(getBlockParams)
-    console.log(getBlockResult.data);
-    
+    const getBlockResult = await axios.request(getBlockParams)    
     expect(getBlockResult.data).toEqual(lastBlock);
   });
 
-	afterAll(async () => {
-		// clear utxo list
-		const params: object = {
-			method: "get",
-			baseURL: "http://localhost:3001",
-			url: "/utxos/clear/test",
-		};
-		await axios.request(params);
-	});
+	// afterAll(async () => {
+	// 	// clear utxo list
+	// 	const params: object = {
+	// 		method: "get",
+	// 		baseURL: "http://localhost:3001",
+	// 		url: "/utxos/clear/test",
+	// 	};
+	// 	await axios.request(params);
+	// });
 });

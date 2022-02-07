@@ -50,7 +50,6 @@ describe("Transaction Router test", () => {
 			};
 			const result = await axios.request(params);
 			const tx: Transaction = result.data;
-			console.log(tx);
 
 			expect(Transaction.isValidTx(tx, allUtxoList)).toBe(true);
 			expect(tx?.txOuts[0].address).toBe(receiverAddress);

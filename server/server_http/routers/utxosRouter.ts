@@ -1,5 +1,6 @@
 import express from "express"
 import GlobalVar from "../../blockchain/globalVar";
+import { Block } from "../../blockchain/structure/block";
 import UnspentTxOutput from "../../blockchain/transaction/unspentTxOutput";
 import Wallet from "../../blockchain/wallet/wallet";
 
@@ -18,9 +19,9 @@ router.get("/:address", (req, res) => {
 		return;
 	}
 
-  const myAddress: string = req.params.address;
-  const myUtxoList: UnspentTxOutput[] = UnspentTxOutput.findMyUtxoList(myAddress, GlobalVar.utxoList) 
-  res.send(myUtxoList)
+  const walletAddress: string = req.params.address;
+  const foundUtxoList: UnspentTxOutput[] = UnspentTxOutput.findMyUtxoList(walletAddress, GlobalVar.utxoList) 
+  res.send(foundUtxoList)
 })
 
 router.get("/create/test", (req, res) => {
@@ -56,7 +57,11 @@ router.get("/create/test", (req, res) => {
 })
 
 router.get("/clear/test", (req, res) => {
-  GlobalVar.utxoList = [];
+  GlobalVar.utxoList = UnspentTxOutput.validateAndUpdateUtxoList(
+		Block.getGenesisBlock().data,
+		[],
+		0
+	);
   console.log("Cleared test utxoList");
   
   res.send("Creared test utxoList")
