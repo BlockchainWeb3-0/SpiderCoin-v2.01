@@ -6,6 +6,8 @@ import * as config from "../../blockchain/config";
 import { broadcastLastBlock } from "../../server_p2p/p2pServer";
 import UnspentTxOutput from "../../blockchain/transaction/unspentTxOutput";
 import TransactionPool from "../../blockchain/transaction/transactionPool";
+import TxIn from "../../blockchain/transaction/transactionInput";
+import Wallet from "../../blockchain/wallet/wallet";
 
 export const router = express.Router();
 
@@ -30,9 +32,11 @@ router.post("/mineBlock", (req, res) => {
 		return;
 	}
 
+	const minerAddress = req.body.minerAddress || Wallet.getPulicKeyFromWallet();
+
 	// Merge miner's reward tx with txlist from txpool
 	const txListForMining: Transaction[] = Transaction.createTxListForMining(
-		req.body.minerAddress,
+		minerAddress,
 		config.MINING_REWARD,
 		GlobalVar.blockchain.getLastBlock().header.index,
 		GlobalVar.txpool.txList
@@ -59,7 +63,10 @@ router.post("/mineBlock", (req, res) => {
 				return;
 			}
 			GlobalVar.utxoList = updateUtxoList;
-			TransactionPool.removeInvalidTxsFromTxpool(updateUtxoList, GlobalVar.txpool.txList)
+			GlobalVar.txpool.txList = TransactionPool.removeInvalidTxsFromTxpool(
+				updateUtxoList,
+				GlobalVar.txpool.txList
+			);
 			res.send(GlobalVar.blockchain.getLastBlock());
 		} else {
 			console.log("Mining failed");

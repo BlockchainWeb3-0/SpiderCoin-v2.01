@@ -17,13 +17,14 @@ export default class TxIn {
 	public txOutId: string;
 	public txOutIndex: number;
 	public signature: string;
+	public amount: number;
 
 	constructor(txOutId: string, txOutIndex: number, signature: string) {
 		this.txOutId = txOutId;
 		this.txOutIndex = txOutIndex;
 		this.signature = signature;
 	}
-
+	
 	/**
 	 * @brief Create new TxIn with empty signature
 	 * @param utxo
@@ -101,9 +102,12 @@ export default class TxIn {
 		return utxoFound.amount;
 	};
 
-	static getTxInsTotalAmount = (txIns: TxIn[], utxo: UnspentTxOutput[]): number => {
+	static getTxInsTotalAmount = (txIns: TxIn[], utxoList: UnspentTxOutput[]): number => {
 		return txIns
-			.map((txIn) => TxIn.getTxInAmount(txIn, utxo))
+			.map((txIn) => {
+				txIn.amount = this.getTxInAmount(txIn, utxoList)
+				return TxIn.getTxInAmount(txIn, utxoList)
+			})
 			.reduce((a, b) => a + b, 0);
 	}
 

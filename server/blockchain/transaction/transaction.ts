@@ -60,6 +60,7 @@ export default class Transaction {
 
     // create empty txIn to make Transation class
     const rewardTxIn = new TxIn("", blockIndex, "");
+    rewardTxIn.amount = 0;
     const rewardTxOut = new TxOut(minerAddress, config.MINING_REWARD);
 
     const rewardTx = new Transaction("", [rewardTxIn], [rewardTxOut]);

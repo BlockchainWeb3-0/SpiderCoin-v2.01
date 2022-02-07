@@ -75,7 +75,7 @@ export default class TransactionPool {
 			console.log("Removed invalid transactions successfully");
 		} else {
 			console.log(
-				"Fount nothing invalid, all transactions from txpool are valid"
+				"All transactions from txpool are valid"
 			);
 		}
 		

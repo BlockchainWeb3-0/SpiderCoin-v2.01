@@ -56,14 +56,4 @@ describe("Transaction Router test", () => {
 			expect(tx?.txOuts[0].amount).toBe(10);
 		});
 	});
-
-	afterAll(async () => {
-		// clear utxo list
-		const params: object = {
-			method: "get",
-			baseURL: "http://localhost:3001",
-			url: "/utxos/clear/test",
-		};
-		await axios.request(params);
-	});
 });
