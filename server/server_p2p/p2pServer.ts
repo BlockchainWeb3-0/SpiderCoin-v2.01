@@ -42,7 +42,7 @@ const initConnection = (ws: WebSocket) => {
 	write(ws, Message.queryTxpool());
 };
 
-const connectToPeers = (peer: string): void => {
+const connectToPeer = (peer: string): void => {
 	const ws: WebSocket = new WebSocket(peer);
 	ws.on("Open", () => {
 		console.log(`Connected to peer: ${ws.url}`);
@@ -226,7 +226,7 @@ const broadcast = (message: Message) => {
 
 export {
 	initP2PServer,
-	connectToPeers,
+	connectToPeer,
 	disconnectToPeer,
 	broadcastLastBlock,
 	broadcastTxpool,
