@@ -15,6 +15,9 @@ const TxIn = ({ txIn, index }) => {
 			<div className="elem">
 				<b>txOutIndex : </b> {txIn.txOutIndex}
 			</div>
+			<div className="elem">
+				<b>amount : </b> {txIn.amount}
+			</div>
 		</div>
 	);
 };
