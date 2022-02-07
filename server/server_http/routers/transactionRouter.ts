@@ -15,12 +15,13 @@ router.get("/txpool", (req, res) => {
 	res.send(GlobalVar.txpool.txList);
 })
 
-router.post("/send", (req, res) => {
+router.post("/create", (req, res) => {
 	const receiverAddress: string = req.body.receiverAddress;
 	const sendingAmount: number = req.body.sendingAmount;
 	const senderAddress: string = Wallet.getPulicKeyFromWallet();
 	const senderPrivateKey: string = Wallet.getPrivateKeyFromWallet();
 
+	// ! exception handling : request body data could be invalid
 	if (receiverAddress === undefined || sendingAmount === undefined) {
 		console.log("Invalid receiver address and sending amount from request");
 		res.send(null);
@@ -33,7 +34,7 @@ router.post("/send", (req, res) => {
 		return;
 	}
 
-	const newTx = Transaction.sendTx(
+	const newTx: Transaction | null = Transaction.createTx(
 		receiverAddress,
 		sendingAmount,
 		senderAddress,
@@ -42,30 +43,9 @@ router.post("/send", (req, res) => {
 		GlobalVar.txpool.txList
 	);
 
-	res.send(newTx);
-})
-
-router.post("/create", (req, res) => {
-	const { receiverAddress, sendingAmount, senderAddress, privateKey } =
-		req.body;
-	// ! exception handling : UTXO list could be null
-	if (GlobalVar.utxoList === null ){
-		console.log("Invalid UTXO list");
-		res.send(null);
-		return;
-	}
-	const newTx: Transaction | null = Transaction.createTx(
-		receiverAddress,
-		sendingAmount,
-		senderAddress,
-		privateKey,
-		GlobalVar.utxoList,
-		GlobalVar.txpool.txList
-	);
-
 	// ! exception handling : newTx could be null
   if(newTx === null) {
 		console.log("Transaction wasn't created.");
   }
-	res.send(newTx)
+	res.send(newTx);
 })

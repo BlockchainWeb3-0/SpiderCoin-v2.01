@@ -42,7 +42,7 @@ describe("Blocks Router test", () => {
 		const createTxParams: object = {
 			method: "post",
 			baseURL: "http://localhost:3001",
-			url: "/transaction/send",
+			url: "/transaction/create",
 			data: {
 				receiverAddress,
 				sendingAmount,
@@ -98,14 +98,4 @@ describe("Blocks Router test", () => {
     const getBlockResult = await axios.request(getBlockParams)    
     expect(getBlockResult.data).toEqual(lastBlock);
   });
-
-	// afterAll(async () => {
-	// 	// clear utxo list
-	// 	const params: object = {
-	// 		method: "get",
-	// 		baseURL: "http://localhost:3001",
-	// 		url: "/utxos/clear/test",
-	// 	};
-	// 	await axios.request(params);
-	// });
 });

@@ -33,7 +33,6 @@ const initConnection = (ws: WebSocket) => {
 	// Query last block from connected node
 	write(ws, Message.queryLastBlock());
 	
-	// ***** ADDED *****
 	// Query transaction pool from connected node
 	write(ws, Message.queryTxpool());
 };
@@ -188,7 +187,6 @@ const handleBlockchainResponse = (receivedBlocks: Block[]) => {
 	}
 };
 
-// ***** ADDED *****
 const handleReceivedTx = (
 	tx: Transaction,
 	utxoList: UnspentTxOutput[],
@@ -197,12 +195,10 @@ const handleReceivedTx = (
 	TransactionPool.addTxToTxpool(tx, utxoList, txpool);
 };
 
-// ***** ADDED *****
 const broadcastLastBlock = (): void => {
 	broadcast(Message.responseLastBlock());
 }
 
-// ***** ADDED *****
 const broadcastTxpool = (): void => {
 	broadcast(Message.responseTxpool());
 }
