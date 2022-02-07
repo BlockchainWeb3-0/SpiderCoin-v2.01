@@ -137,9 +137,10 @@ export default class Transaction {
     );
     newSignedTx.txIns = newSignedTxIns;
 
-    return newSignedTx;
-  };
+    // 7. Add newSignedTx into Transaction pool
+    TransactionPool.addTxToTxpool(newSignedTx, utxoList, txpool);
 
+<<<<<<< HEAD
   /**
    * Creates new transaction and add it to txpool
    * @param receiverAddress
@@ -171,6 +172,9 @@ export default class Transaction {
     }
     TransactionPool.addTxToTxpool(newTx, utxoList, txpool);
     return newTx;
+=======
+    return newSignedTx;
+>>>>>>> chapter2
   };
 
   static createTxListForMining = (minerAddress: string, miningReward: number, lastBlockIndex: number, txpool: Transaction[]): Transaction[] => {
