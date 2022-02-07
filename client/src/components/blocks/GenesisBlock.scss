@@ -1,0 +1,36 @@
+
+
+$cube_size: 100px;
+.block-container {
+  display: flex;
+  flex-direction: row;
+  .block {
+    width: 20%;
+  }
+  .block-contents {
+    width: 80%;
+  }
+}
+.genesisCube {
+  width:$cube_size; height:$cube_size;
+  transform-style:preserve-3d;
+  transform:rotateX(-30deg) rotateY(35deg) translateY(-30%);
+  > div {
+    position:absolute; left:50%; top:50%;
+    transform-style:preserve-3d;
+    > div {
+      position:absolute; left:50%; top:50%;
+      width:$cube_size; height:$cube_size; border-radius:$cube_size/12;
+      background:rgba(221,1,1,0.2);
+      background:linear-gradient(rgba(237,2,2,0.2),rgba(153,3,3,0.1));
+      box-shadow:0 0 4px rgba(255,5,5,0.2),inset 0 0 4px rgba(255,5,5,0.2);
+    }
+  }
+}
+
+.genesisCube > div > div:nth-child(1) {transform:translate3d(0,0,$cube_size/2);}
+.genesisCube > div > div:nth-child(2) {transform:rotateX(90deg) translate3d(0,0,$cube_size/2);}
+.genesisCube > div > div:nth-child(3) {transform:rotateX(180deg) translate3d(0,0,$cube_size/2);}
+.genesisCube > div > div:nth-child(4) {transform:rotateX(270deg) translate3d(0,0,$cube_size/2);}
+.genesisCube > div > div:nth-child(5) {transform:rotateY(90deg) translate3d(0,0,$cube_size/2);}
+.genesisCube > div > div:nth-child(6) {transform:rotateY(-90deg) translate3d(0,0,$cube_size/2);}

@@ -1,0 +1,20 @@
+@import "../../styles/colors.scss";
+
+.wallet-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  .title {
+    font-size: 30px;
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: 20px;
+  }
+  .contents{
+    white-space: normal; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+  }
+}
+

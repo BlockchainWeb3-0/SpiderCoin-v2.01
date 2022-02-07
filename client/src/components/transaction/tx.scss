@@ -1,0 +1,51 @@
+@import "../../styles/colors.scss";
+
+.tx-container {
+  background-color: var(--body-color);
+  color: var(--text-color);
+  .tx-contents {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .txId {
+    white-space: normal; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+    color: var(--logo-color);
+  }
+}
+
+.txIn-contents {
+  width: 100%;
+  padding: 5px;
+  margin-bottom: 5px;
+  border: 1px solid #AAA;
+  .txIn-title {
+    color: var(--logo-color);
+  }
+  .elem {
+    display: inline-block;
+    width: 100%; 
+    white-space: normal; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+  }
+}
+
+.txOut-contents {
+  width: 100%;
+  padding: 5px;
+  margin-bottom: 5px;
+  border: 1px solid #AAA;
+  .txOut-title {
+    color: var(--logo-color);
+  }
+  .elem {
+    display: inline-block;
+    width: 100%; 
+    white-space: normal; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+  }
+}
