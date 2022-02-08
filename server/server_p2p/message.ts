@@ -33,7 +33,7 @@ class Message {
 	
 	static responseAllBlocks = (): Message => ({
 		type: MessageType.RESPONSE_BLOCKCHAIN,
-		data: JSON.stringify([GlobalVar.blockchain.blocks]),
+		data: JSON.stringify(GlobalVar.blockchain.blocks),
 	});
 
   static queryTxpool = (): Message => ({

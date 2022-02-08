@@ -44,6 +44,8 @@ const initConnection = (ws: WebSocket) => {
 	// Query transaction pool from connected node
 	setTimeout(() => {
 		write(ws, Message.queryTxpool());
+		console.log("query query query");
+
 	}, 500)
 };
 
@@ -102,7 +104,7 @@ const initMessageHandler = (ws: WebSocket) => {
 					
 				// Received RESPONSE_BLOCKCHAIN message => replace blockchain if received one is longer 
 				case MessageType.RESPONSE_BLOCKCHAIN:
-					const receivedBlocks: Block[] = JSON.parse(message.data);
+					const receivedBlocks: Block[] = JSON.parse(message.data);					
 					// ! exception handling : Received block could be null
 					if (receivedBlocks === null) {
 						console.log(
@@ -111,10 +113,18 @@ const initMessageHandler = (ws: WebSocket) => {
 						break;
 					}
 					handleBlockchainResponse(receivedBlocks);
+					// Query transaction pool from connected node
+					setTimeout(() => {
+						write(ws, Message.queryTxpool());
+					}, 500)
 					break;
 
 				// Received QUERY_TRANSACTION_POOL message => reponse txpool
 				case MessageType.QUERY_TRANSACTION_POOL:
+					console.log("$$$$$$$$$$$$$$$$$$$");
+					
+					console.log(Message.responseTxpool());
+					
 					write(ws, Message.responseTxpool());
 					break;
 
@@ -135,7 +145,6 @@ const initMessageHandler = (ws: WebSocket) => {
 								return;
 							}
 							handleReceivedTx(tx, GlobalVar.utxoList, GlobalVar.txpool.txList);
-							broadcastTxpool();
 						} catch (error) {
 							console.log(error);
 						}
@@ -207,10 +216,12 @@ const handleReceivedTx = (
 };
 
 const broadcastLastBlock = (): void => {
+	console.log("broadcastLastBlock");
 	broadcast(Message.responseLastBlock());
 }
 
 const broadcastTxpool = (): void => {
+	console.log("broadcastTxpool");
 	broadcast(Message.responseTxpool());
 }
 
