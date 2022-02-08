@@ -26,25 +26,31 @@ const initP2PServer = (port: number) => {
 const offP2PServer = () => {
 	console.log(`🗑 Disconnected websocket p2p port on: ${p2pPort} 🗑`);
 	server.close();
+	sockets.forEach((ws) => {
+		removeConnection(ws)
+	})
 }
 
 const initConnection = (ws: WebSocket) => {
 	// Add conncected ws into sockets list
 	sockets.push(ws);
 
-	initErrorHandler(ws);
 	initMessageHandler(ws);
+	initErrorHandler(ws);
 
 	// Query last block from connected node
 	write(ws, Message.queryLastBlock());
 	
 	// Query transaction pool from connected node
-	write(ws, Message.queryTxpool());
+	setTimeout(() => {
+		write(ws, Message.queryTxpool());
+	}, 500)
 };
 
 const connectToPeer = (peer: string): void => {
 	const ws: WebSocket = new WebSocket(peer);
-	ws.on("Open", () => {
+	
+	ws.on("open", () => {
 		console.log(`Connected to peer: ${ws.url}`);
 		initConnection(ws);
 	})
@@ -60,19 +66,18 @@ const disconnectToPeer = (peer: string) => {
 	ws.on("close", () => removeConnection(ws));
 }
 
-const removeConnection = (ws: WebSocket) => {
+const removeConnection = (ws: WebSocket) => {	
 	console.log(`Closed connection with peer: ${ws.url}`);
 	sockets.splice(sockets.indexOf(ws), 1);
 };
 
 const initErrorHandler = (ws: WebSocket) => {
-	console.log("Connection error found!");
 	ws.on("close", () => removeConnection(ws));
 	ws.on("error", () => removeConnection(ws));
 };
 
 const initMessageHandler = (ws: WebSocket) => {
-	ws.on("messgae", (data: string) => {
+	ws.on("message", (data: string) => {
 		try {
 			const message: Message = JSON.parse(data);
 
@@ -116,6 +121,7 @@ const initMessageHandler = (ws: WebSocket) => {
 				// Received RESPONSE_TRANSACTION_POOL message => push them into my txpool
 				case MessageType.RESPONSE_TRANSACTION_POOL:
 					const receivedTxList: Transaction[] = JSON.parse(message.data);
+					
 					// ! exception handling : Txpool block data could be null
 					if (receivedTxList === null) {
 						console.log(`Invalid Txpool data: ${JSON.stringify(message.data)}`);
@@ -154,12 +160,13 @@ const handleBlockchainResponse = (receivedBlocks: Block[]) => {
 	 *  2. longer than mine
 	 *  3. shorter than mine
 	 */
+	
 	if (receivedBlocks.length === 0) {
 		console.log("No blocks in received blockchain");
 		return;
 	}
-
-	const lastBlockReceived: Block = receivedBlocks[receivedBlocks.length - 1];
+	
+	const lastBlockReceived: Block = receivedBlocks[receivedBlocks.length - 1];	
 	const lastBlockHeld: Block = GlobalVar.blockchain.getLastBlock();
 
 	if (!Block.isValidBlockStructure(lastBlockReceived)) {

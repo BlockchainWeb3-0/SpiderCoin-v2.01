@@ -28,12 +28,12 @@ class Message {
 	
 	static responseLastBlock = (): Message => ({
 		type: MessageType.RESPONSE_BLOCKCHAIN,
-		data: JSON.stringify(GlobalVar.blockchain.getLastBlock()),
+		data: JSON.stringify([GlobalVar.blockchain.getLastBlock()]),
 	});
 	
 	static responseAllBlocks = (): Message => ({
 		type: MessageType.RESPONSE_BLOCKCHAIN,
-		data: JSON.stringify(GlobalVar.blockchain.blocks),
+		data: JSON.stringify([GlobalVar.blockchain.blocks]),
 	});
 
   static queryTxpool = (): Message => ({
@@ -42,8 +42,8 @@ class Message {
   })
 
   static responseTxpool = (): Message => ({
-    type: MessageType.QUERY_TRANSACTION_POOL,
-    data: JSON.stringify(GlobalVar.txpool),
+    type: MessageType.RESPONSE_TRANSACTION_POOL,
+    data: JSON.stringify(GlobalVar.txpool.txList),
   })
 }
 

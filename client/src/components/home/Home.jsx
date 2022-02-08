@@ -30,7 +30,10 @@ const Home = () => {
 	const addPeerParams = {
 		method: "post",
 		baseURL: `http://localhost:3001`,
-		url: "/peer/list",
+		url: "/peer/add",
+		data: {
+			peer: [`ws://localhost:${peerPort}`]
+		}
 	};
 
 	const p2pOn = async () => {
