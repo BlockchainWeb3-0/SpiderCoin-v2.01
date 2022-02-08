@@ -12,12 +12,24 @@ router.get('/', (req, res) => {
 })
 
 router.get("/mine/:address", (req, res) => {
+  // ! exception handling : UTXO list could be null
+	if (GlobalVar.utxoList === null ){
+		console.log("Invalid UTXO list");
+		res.send(null);
+		return;
+	}
   const myAddress: string = req.params.address;
   const myUtxoList: UnspentTxOutput[] = UnspentTxOutput.findMyUtxoList(myAddress, GlobalVar.utxoList) 
   res.send(myUtxoList)
 })
 
 router.get("/create/test", (req, res) => {
+  // ! exception handling : UTXO list could be null
+	if (GlobalVar.utxoList === null ){
+		console.log("Invalid UTXO list");
+		res.send(null);
+		return;
+	}
   for (let i = 0; i < 5; i++) {
     const utxo = new UnspentTxOutput(
       `id${i}`,
@@ -25,6 +37,7 @@ router.get("/create/test", (req, res) => {
       Wallet.getPulicKeyFromWallet(),
       10
     );
+    
     GlobalVar.utxoList.push(utxo);
   }
   for (let i = 0; i < 5; i++) {
