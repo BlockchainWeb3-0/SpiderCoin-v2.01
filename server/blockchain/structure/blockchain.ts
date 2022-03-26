@@ -3,6 +3,9 @@ import { Block } from "./block";
 import _ from "lodash";
 import UnspentTxOutput from "../transaction/unspentTxOutput";
 import Transaction from "../transaction/transaction";
+import GlobalVar from "../globalVar";
+import { broadcastLastBlock } from "../../server_p2p/p2pServer";
+import TransactionPool from "../transaction/transactionPool";
 
 export default class Blockchain {
 	blocks: Block[];
@@ -42,8 +45,40 @@ export default class Blockchain {
 		}
 
 		this.blocks.push(newBlock);
+
+		// ! exception handling : UTXO list could be null
+		if (GlobalVar.utxoList === null) {
+			console.log("Invalid transaction in blockchain");
+			return false;
+		}
+
+		const updateUtxoList = UnspentTxOutput.validateAndUpdateUtxoList(
+			newBlock.data,
+			GlobalVar.utxoList,
+			newBlock.header.index
+		);
+		if (updateUtxoList === null) {
+			console.log("Faild to validate and update UTXO list");
+			return false;
+		}
+		GlobalVar.utxoList = updateUtxoList;
+		GlobalVar.txpool.txList = TransactionPool.removeInvalidTxsFromTxpool(
+			updateUtxoList,
+			GlobalVar.txpool.txList
+		);
+
 		return true;
 	};
+
+	mineBlock = (newBlock: Block, txListForMining: Transaction[], utxoList: UnspentTxOutput[],) => {
+		const miningResult: boolean = GlobalVar.blockchain.addBlock(newBlock);
+		if (miningResult) {
+			console.log("Mining new Block is done successfully");
+			broadcastLastBlock();
+		} else {
+			console.log("Mining failed");
+		}
+	}
 
 	/**
 	 * @brief Replace blockchain with new blockchain from other node
@@ -93,13 +128,17 @@ export default class Blockchain {
 				utxoList,
 				currentBlock.header.index
 			);
-
 			// ! exception handling : UTXO list could be null
 			if (utxoList === null) {
 				console.log("Invalid transaction in blockchain");
 				return false;
 			}
 		}
+		GlobalVar.utxoList = utxoList;
+		GlobalVar.txpool.txList = TransactionPool.removeInvalidTxsFromTxpool(
+			utxoList,
+			GlobalVar.txpool.txList
+		);
 		return true;
 	};
 

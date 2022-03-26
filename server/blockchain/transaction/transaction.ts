@@ -59,8 +59,7 @@ export default class Transaction {
     // * reward transaction does not have transaction input.
 
     // create empty txIn to make Transation class
-    const rewardTxIn = new TxIn("", blockIndex, "");
-    rewardTxIn.amount = 0;
+    const rewardTxIn = new TxIn("", blockIndex, "", 0);
     const rewardTxOut = new TxOut(minerAddress, config.MINING_REWARD);
 
     const rewardTx = new Transaction("", [rewardTxIn], [rewardTxOut]);
@@ -140,7 +139,6 @@ export default class Transaction {
 
     // 7. Add newSignedTx into Transaction pool
     TransactionPool.addTxToTxpool(newSignedTx, utxoList, txpool);
-
     return newSignedTx;
   };
 
@@ -244,7 +242,7 @@ export default class Transaction {
     }
 
     // check if txIns total amount === txOuts total amount
-    const txInsTotalAmount = TxIn.getTxInsTotalAmount(tx.txIns, utxoList);
+    const txInsTotalAmount = TxIn.getTxInsTotalAmount(tx.txIns);
     const txOutsTotalAmount = tx.txOuts
       .map((txOut) => txOut.amount)
       .reduce((a, b) => a + b, 0);

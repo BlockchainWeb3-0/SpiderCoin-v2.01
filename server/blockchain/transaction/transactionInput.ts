@@ -19,20 +19,20 @@ export default class TxIn {
 	public signature: string;
 	public amount: number;
 
-	constructor(txOutId: string, txOutIndex: number, signature: string) {
+	constructor(txOutId: string, txOutIndex: number, signature: string, amount: number) {
 		this.txOutId = txOutId;
 		this.txOutIndex = txOutIndex;
 		this.signature = signature;
-		this.amount = 0;
+		this.amount = amount;
 	}
-	
+
 	/**
 	 * @brief Create new TxIn with empty signature
 	 * @param utxo
 	 * @returns Transaction input with empty signature
 	 */
 	static createUnSignedTxIn = (utxo: UnspentTxOutput): TxIn => {
-		const txIn = new TxIn(utxo.txOutId, utxo.txOutIndex, "");
+		const txIn = new TxIn(utxo.txOutId, utxo.txOutIndex, "", utxo.amount);
 		return txIn;
 	};
 
@@ -42,29 +42,47 @@ export default class TxIn {
 		return txIns;
 	};
 
-	static signToTxIn = (unsignedTxIn:TxIn, privateKey:string, txId: string): TxIn => {
-		return {...unsignedTxIn, signature: Wallet.signWithPrivateKey(privateKey, txId)}
-	}
+	static signToTxIn = (
+		unsignedTxIn: TxIn,
+		privateKey: string,
+		txId: string
+	): TxIn => {
+		return {
+			...unsignedTxIn,
+			signature: Wallet.signWithPrivateKey(privateKey, txId),
+		};
+	};
 
-	static getSignedTxInList = (unsignedTxInList: TxIn[], utxoListToBeUsed: UnspentTxOutput[], privateKey: string, txId: string): TxIn[] => {
+	static getSignedTxInList = (
+		unsignedTxInList: TxIn[],
+		utxoListToBeUsed: UnspentTxOutput[],
+		privateKey: string,
+		txId: string
+	): TxIn[] => {
 		return unsignedTxInList.map((unsignedTxIn: TxIn) => {
-			const utxoMatchesTxIn = UnspentTxOutput.findUtxo(unsignedTxIn.txOutId, unsignedTxIn.txOutIndex, utxoListToBeUsed);
-			if(utxoMatchesTxIn === undefined) {
-				const errMsg = "Cannot find UTxO which matches TxIn"
+			const utxoMatchesTxIn = UnspentTxOutput.findUtxo(
+				unsignedTxIn.txOutId,
+				unsignedTxIn.txOutIndex,
+				utxoListToBeUsed
+			);
+			if (utxoMatchesTxIn === undefined) {
+				const errMsg = "Cannot find UTxO which matches TxIn";
 				console.log(errMsg);
 				throw Error(errMsg);
 			}
-			if(Wallet.getPublicKeyFromPrivateKey(privateKey) !== utxoMatchesTxIn.address) {
-				const errMsg = "Invalid private key." 
+			if (
+				Wallet.getPublicKeyFromPrivateKey(privateKey) !==
+				utxoMatchesTxIn.address
+			) {
+				const errMsg = "Invalid private key.";
 				console.log(errMsg);
 				throw Error(errMsg);
 			}
 			const signedTxIn: TxIn = this.signToTxIn(unsignedTxIn, privateKey, txId);
 			return signedTxIn;
-		}) 
-	}
+		});
+	};
 
-	
 	/********************************/
 	/***** Validation Functions *****/
 	/********************************/
@@ -89,28 +107,15 @@ export default class TxIn {
 		return true;
 	};
 
-	/**
-	 * @brief txIn doen't have amount, so that get amount from UTxO
-	 * @param txIn transaction input
-	 * @param utxoList unspent tx output list where txIn came from
-	 * @returns amount of txIn
-	 */
-	static getTxInAmount = (txIn: TxIn, utxoList: UnspentTxOutput[]) => {
-		const utxoFound = UnspentTxOutput.findUtxo(txIn.txOutId, txIn.txOutIndex, utxoList);
-		if (utxoFound === undefined) {
-			return 0;
-		}
-		return utxoFound.amount;
-	};
-
-	static getTxInsTotalAmount = (txIns: TxIn[], utxoList: UnspentTxOutput[]): number => {
+	static getTxInsTotalAmount = (
+		txIns: TxIn[],
+	): number => {
 		return txIns
 			.map((txIn) => {
-				txIn.amount = this.getTxInAmount(txIn, utxoList)
-				return TxIn.getTxInAmount(txIn, utxoList)
+				return txIn.amount;
 			})
 			.reduce((a, b) => a + b, 0);
-	}
+	};
 
 	/**
 	 * @brief Validates txIn
@@ -131,8 +136,11 @@ export default class TxIn {
 		 */
 
 		// 1. check if txIn is from UTxO list
-		const utxoFound: UnspentTxOutput | undefined =
-			UnspentTxOutput.findUtxo(txIn.txOutId, txIn.txOutIndex, utxoList);
+		const utxoFound: UnspentTxOutput | undefined = UnspentTxOutput.findUtxo(
+			txIn.txOutId,
+			txIn.txOutIndex,
+			utxoList
+		);
 		if (utxoFound === undefined) {
 			console.log("Cannot find TxIn from UTxO");
 			return false;

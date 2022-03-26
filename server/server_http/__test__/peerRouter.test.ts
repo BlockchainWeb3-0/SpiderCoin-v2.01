@@ -1,5 +1,4 @@
 import axios from "axios";
-import { getP2PServer, initP2PServer } from "../../server_p2p/p2pServer";
 
 describe("Peer Router test", () => {
 	let getParams: object;

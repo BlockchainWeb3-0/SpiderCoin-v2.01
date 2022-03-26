@@ -121,17 +121,12 @@ const initMessageHandler = (ws: WebSocket) => {
 
 				// Received QUERY_TRANSACTION_POOL message => reponse txpool
 				case MessageType.QUERY_TRANSACTION_POOL:
-					console.log("$$$$$$$$$$$$$$$$$$$");
-					
-					console.log(Message.responseTxpool());
-					
 					write(ws, Message.responseTxpool());
 					break;
 
 				// Received RESPONSE_TRANSACTION_POOL message => push them into my txpool
 				case MessageType.RESPONSE_TRANSACTION_POOL:
 					const receivedTxList: Transaction[] = JSON.parse(message.data);
-					
 					// ! exception handling : Txpool block data could be null
 					if (receivedTxList === null) {
 						console.log(`Invalid Txpool data: ${JSON.stringify(message.data)}`);
